@@ -1,0 +1,19 @@
+[workspace]
+members = [
+  "native_host",
+  "keepass_db",
+  "error_enum",
+]
+
+[profile.dev]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+[profile.release]
+panic = "abort"
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
