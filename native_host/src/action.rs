@@ -1,10 +1,76 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug)]
 pub(crate) struct Action {
     pub request_id: String,
-    #[serde(flatten)]
     pub request: Request,
+}
+
+impl<'de> Deserialize<'de> for Action {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct MapVisitor;
+        impl<'de> serde::de::Visitor<'de> for MapVisitor {
+            type Value = Action;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(formatter, "action structure")
+            }
+
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> Result<Self::Value, A::Error> {
+                use serde::de::Error;
+
+                let mut request_id = None;
+                let mut action = None;
+                let mut request = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        "request_id" => {
+                            if request_id.is_some() {
+                                return Err(A::Error::duplicate_field("request_id"));
+                            }
+                            request_id = Some(map.next_value()?);
+                        }
+                        "action" => {
+                            if action.is_some() {
+                                return Err(A::Error::duplicate_field("action"));
+                            }
+                            action = Some(map.next_value::<String>()?);
+                        }
+                        "request" => {
+                            if request.is_some() {
+                                return Err(A::Error::duplicate_field("request"));
+                            }
+                            request = Some(map.next_value::<serde_json::Value>()?);
+                        }
+                        other => {
+                            return Err(A::Error::unknown_field(
+                                other,
+                                &["request_id", "action", "request"],
+                            ))
+                        }
+                    }
+                }
+
+                // Produce the expected JSON structure in order to deserialize the enum
+                let json = serde_json::json!({
+                    action.ok_or(A::Error::missing_field("action"))?:
+                        request.ok_or(A::Error::missing_field("request"))?
+                });
+                let request_vec = serde_json::to_vec(&json).map_err(|e| A::Error::custom(e))?;
+
+                Ok(Self::Value {
+                    request_id: request_id.ok_or(A::Error::missing_field("request_id"))?,
+                    request: serde_json::from_slice(&request_vec)
+                        .map_err(|e| A::Error::custom(e))?,
+                })
+            }
+        }
+
+        deserializer.deserialize_map(MapVisitor)
+    }
 }
 
 #[derive(Deserialize, Debug)]
