@@ -178,7 +178,7 @@ impl Browser {
             &serde_json::json!({
                 allowed_key: [extension_id],
                 "description": "Native messaging host providing browser extensions access to a KeePass database file",
-                "name": "de.palant.kdbx_native_host",
+                "name": NATIVE_APP_ID,
                 "path": executable_path,
                 "type": "stdio",
             }),
