@@ -19,7 +19,7 @@ fn is_group(element: &Element) -> bool {
 
 #[derive(Debug)]
 pub struct DatabaseXML {
-    pub xml: Element,
+    xml: Element,
     inner_header: InnerHeader,
 }
 
