@@ -53,7 +53,7 @@ fn select_database() -> Result<(), Error> {
             Ok(None) => Err(Error::Aborted),
             Err(native_dialog::Error::NoImplementation) => {
                 let input: String = Input::new()
-                    .with_prompt("Please enter the database path.")
+                    .with_prompt("Please enter the database path")
                     .interact_text()?;
                 Config::set_database_path(PathBuf::from(input))
             }
@@ -112,8 +112,13 @@ fn setup_browsers() -> Result<(), Error> {
             .default(0)
             .interact_opt()?
             .ok_or(Error::Aborted)?;
-        browser_support::Browser::all()[selection]
-            .configure("chrome-extension://kpcjmfjmknbolfjjemmbpnajbiehajac/")?;
+
+        let browser = &browser_support::Browser::all()[selection];
+        let extension_id = Input::new()
+            .with_prompt("Please enter an extension ID or press Enter to keep the default")
+            .default(browser.extension_id().to_string())
+            .interact_text()?;
+        browser.configure(&extension_id)?;
     }
 }
 

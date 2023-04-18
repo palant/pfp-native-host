@@ -21,6 +21,7 @@ macro_rules! declare_enum {
             )*
         }
     } => {
+        #[derive(Debug)]
         $visibility enum $type {
             $(
                 #[doc=$doc]
@@ -178,5 +179,13 @@ impl Browser {
             }),
         )?;
         Ok(())
+    }
+
+    pub fn extension_id(&self) -> &'static str {
+        match self {
+            Self::Firefox => "pfp@palant.info",
+            // TODO: Change this once the extension is released
+            _ => "chrome-extension://kpcjmfjmknbolfjjemmbpnajbiehajac/",
+        }
     }
 }
