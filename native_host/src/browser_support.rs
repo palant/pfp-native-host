@@ -1,5 +1,5 @@
 const NATIVE_APP_ID: &str = "de.palant.kdbx_native_host";
-const CONFIG_FILE: &str = const_format::concatcp!("NativeMessagingHosts/", NATIVE_APP_ID, ".json");
+const CONFIG_FILE: &str = const_format::concatcp!(NATIVE_APP_ID, ".json");
 
 error_enum::declare! {
     pub(crate) enum BrowserSetupError {
@@ -100,6 +100,13 @@ impl Browser {
                 root.push("microsoft-edge");
             }
         };
+
+        if let Self::Firefox = self {
+            root.push("native-messaging-hosts");
+        } else {
+            root.push("NativeMessagingHosts");
+        }
+
         Ok(root)
     }
 
@@ -126,6 +133,7 @@ impl Browser {
                 root.push("Microsoft Edge");
             }
         };
+        root.push("NativeMessagingHosts");
         Ok(root)
     }
 
@@ -155,6 +163,9 @@ impl Browser {
             .as_os_str()
             .to_str()
             .ok_or(BrowserSetupError::NoProcessPath)?;
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
         let mut writer = std::fs::File::create(path)?;
         serde_json::to_writer(
             &mut writer,
