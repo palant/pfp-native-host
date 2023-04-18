@@ -8,6 +8,7 @@ error_enum::declare! {
         ///Current process path could not be determined
         NoProcessPath,
         Io(std::io::Error),
+        Json(serde_json::Error),
     }
 }
 
@@ -154,19 +155,16 @@ impl Browser {
             .as_os_str()
             .to_str()
             .ok_or(BrowserSetupError::NoProcessPath)?;
-        std::fs::write(
-            path,
-            format!(
-                r#"{{
-    "allowed_origins": [
-        "{extension_id}"
-    ],
-    "description": "Native messaging host providing browser extensions access to a KeePass database file",
-    "name": "de.palant.kdbx_native_host",
-    "path": "{executable_path}",
-    "type": "stdio"
-}}"#,
-            ),
+        let mut writer = std::fs::File::create(path)?;
+        serde_json::to_writer(
+            &mut writer,
+            &serde_json::json!({
+                "allowed_origins": [extension_id],
+                "description": "Native messaging host providing browser extensions access to a KeePass database file",
+                "name": "de.palant.kdbx_native_host",
+                "path": executable_path,
+                "type": "stdio",
+            }),
         )?;
         Ok(())
     }
