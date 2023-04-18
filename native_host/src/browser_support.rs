@@ -167,7 +167,7 @@ impl Browser {
             std::fs::create_dir_all(parent)?;
         }
         let mut writer = std::fs::File::create(path)?;
-        serde_json::to_writer(
+        serde_json::to_writer_pretty(
             &mut writer,
             &serde_json::json!({
                 "allowed_origins": [extension_id],
