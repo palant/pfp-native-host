@@ -1,4 +1,4 @@
-const NATIVE_APP_ID: &str = "de.palant.kdbx_native_host";
+const NATIVE_APP_ID: &str = "works.pfp.kdbx_native_host";
 const CONFIG_FILE: &str = const_format::concatcp!(NATIVE_APP_ID, ".json");
 
 error_enum::declare! {
@@ -188,7 +188,7 @@ impl Browser {
 
     pub fn extension_id(&self) -> &'static str {
         match self {
-            Self::Firefox => "pfp@palant.info",
+            Self::Firefox => "pfp@pfp.works",
             // TODO: Change this once the extension is released
             _ => "chrome-extension://kpcjmfjmknbolfjjemmbpnajbiehajac/",
         }
