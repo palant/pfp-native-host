@@ -168,10 +168,15 @@ impl Browser {
             std::fs::create_dir_all(parent)?;
         }
         let mut writer = std::fs::File::create(path)?;
+        let allowed_key = if let Self::Firefox = self {
+            "allowed_extensions"
+        } else {
+            "allowed_origins"
+        };
         serde_json::to_writer_pretty(
             &mut writer,
             &serde_json::json!({
-                "allowed_origins": [extension_id],
+                allowed_key: [extension_id],
                 "description": "Native messaging host providing browser extensions access to a KeePass database file",
                 "name": "de.palant.kdbx_native_host",
                 "path": executable_path,
