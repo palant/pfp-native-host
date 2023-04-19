@@ -3,6 +3,7 @@ use serde::Serialize;
 use keepass_db::Entry;
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct ActionResponse {
     pub request_id: String,
     pub success: bool,
@@ -23,24 +24,28 @@ pub(crate) enum Response {
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct ErrorResponse {
     pub error: String,
     pub error_code: &'static str,
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct SiteEntriesResponse {
     pub hostname: String,
     pub entries: Vec<Entry>,
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AllEntriesResponse {
     pub aliases: std::collections::HashMap<String, String>,
     pub entries: Vec<Entry>,
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DeriveKeyResponse {
     pub key: String,
     pub bytes_consumed: u32,

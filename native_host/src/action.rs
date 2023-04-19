@@ -21,34 +21,39 @@ impl<'de> Deserialize<'de> for Action {
                 mut map: A,
             ) -> Result<Self::Value, A::Error> {
                 use serde::de::Error;
+                use serde::de::IntoDeserializer;
+
+                const REQUEST_ID_FIELD: &str = "requestId";
+                const ACTION_FIELD: &str = "action";
+                const REQUEST_FIELD: &str = "request";
 
                 let mut request_id = None;
                 let mut action = None;
                 let mut request = None;
                 while let Some(key) = map.next_key()? {
                     match key {
-                        "request_id" => {
+                        REQUEST_ID_FIELD => {
                             if request_id.is_some() {
-                                return Err(A::Error::duplicate_field("request_id"));
+                                return Err(A::Error::duplicate_field(REQUEST_ID_FIELD));
                             }
                             request_id = Some(map.next_value()?);
                         }
-                        "action" => {
+                        ACTION_FIELD => {
                             if action.is_some() {
-                                return Err(A::Error::duplicate_field("action"));
+                                return Err(A::Error::duplicate_field(ACTION_FIELD));
                             }
                             action = Some(map.next_value::<String>()?);
                         }
-                        "request" => {
+                        REQUEST_FIELD => {
                             if request.is_some() {
-                                return Err(A::Error::duplicate_field("request"));
+                                return Err(A::Error::duplicate_field(REQUEST_FIELD));
                             }
                             request = Some(map.next_value::<serde_json::Value>()?);
                         }
                         other => {
                             return Err(A::Error::unknown_field(
                                 other,
-                                &["request_id", "action", "request"],
+                                &[REQUEST_ID_FIELD, ACTION_FIELD, REQUEST_FIELD],
                             ))
                         }
                     }
@@ -56,15 +61,14 @@ impl<'de> Deserialize<'de> for Action {
 
                 // Produce the expected JSON structure in order to deserialize the enum
                 let json = serde_json::json!({
-                    action.ok_or(A::Error::missing_field("action"))?:
-                        request.ok_or(A::Error::missing_field("request"))?
+                    action.ok_or(A::Error::missing_field(ACTION_FIELD))?:
+                        request.ok_or(A::Error::missing_field(REQUEST_FIELD))?
                 });
-                let request_vec = serde_json::to_vec(&json).map_err(|e| A::Error::custom(e))?;
 
                 Ok(Self::Value {
-                    request_id: request_id.ok_or(A::Error::missing_field("request_id"))?,
-                    request: serde_json::from_slice(&request_vec)
-                        .map_err(|e| A::Error::custom(e))?,
+                    request_id: request_id.ok_or(A::Error::missing_field(REQUEST_ID_FIELD))?,
+                    request: Request::deserialize(json.into_deserializer())
+                        .map_err(A::Error::custom)?,
                 })
             }
         }
@@ -104,27 +108,32 @@ pub(crate) enum Request {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct UnlockParameters {
     pub password: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct GetEntriesParameters {
     pub keys: Vec<String>,
     pub hostname: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct GetAllEntriesParameters {
     pub keys: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct GetSitesParameters {
     pub keys: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AddEntryParameters {
     pub keys: Vec<String>,
     pub hostname: String,
@@ -134,6 +143,7 @@ pub(crate) struct AddEntryParameters {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct UpdateEntryParameters {
     pub keys: Vec<String>,
     pub uuid: String,
@@ -145,24 +155,28 @@ pub(crate) struct UpdateEntryParameters {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DuplicateEntryParameters {
     pub keys: Vec<String>,
     pub uuid: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RemoveEntryParameters {
     pub keys: Vec<String>,
     pub uuid: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DeriveKeyParameters {
     pub password: String,
     pub kdf_parameters: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AddAliasParameters {
     pub keys: Vec<String>,
     pub alias: String,
@@ -170,12 +184,14 @@ pub(crate) struct AddAliasParameters {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RemoveAliasParameters {
     pub keys: Vec<String>,
     pub alias: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct SetAliasesParameters {
     pub keys: Vec<String>,
     pub aliases: std::collections::HashMap<String, String>,
