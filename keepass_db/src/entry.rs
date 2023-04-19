@@ -2,6 +2,7 @@ use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use xmltree::{Element, XMLNode};
 
+use crate::Error;
 use crate::XMLHelpers;
 
 #[derive(Serialize, Debug)]
@@ -38,23 +39,23 @@ fn serialize_hostname<S: Serializer>(url: &str, serializer: S) -> Result<S::Ok, 
 }
 
 impl Entry {
-    pub fn generate_uuid() -> String {
-        let buffer = crate::random::random_vec(16).unwrap();
+    pub fn generate_uuid() -> Result<String, Error> {
+        let buffer = crate::random::random_vec(16)?;
 
         use base64::Engine;
-        base64::engine::general_purpose::STANDARD.encode(buffer)
+        Ok(base64::engine::general_purpose::STANDARD.encode(buffer))
     }
 
-    pub fn new(url: &str, title: &str, username: &str, password: &str) -> Self {
-        Self {
-            uuid: Self::generate_uuid(),
+    pub fn new(url: &str, title: &str, username: &str, password: &str) -> Result<Self, Error> {
+        Ok(Self {
+            uuid: Self::generate_uuid()?,
             url: url.to_string(),
             title: title.to_string(),
             username: username.to_string(),
             password: password.to_string(),
             notes: None,
             tags: None,
-        }
+        })
     }
 
     pub fn from_xml(element: &Element) -> Option<Self> {

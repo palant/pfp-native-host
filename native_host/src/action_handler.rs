@@ -103,7 +103,7 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
                 return Err(Error::EntryExists);
             }
 
-            let mut entry = Entry::new("", &params.title, &params.username, &params.password);
+            let mut entry = Entry::new("", &params.title, &params.username, &params.password)?;
             entry.set_hostname(params.hostname);
             let protected = database_xml.get_protected_fields();
             let uuid = database_xml.add_entry(entry, &protected)?;
@@ -154,7 +154,7 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
                 .map(|entry| entry.title)
                 .collect::<HashSet<_>>();
 
-            entry.uuid = Entry::generate_uuid();
+            entry.uuid = Entry::generate_uuid()?;
             let (base_name, mut index) = get_title_base(&entry.title);
             index += 1;
             loop {

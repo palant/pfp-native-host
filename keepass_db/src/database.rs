@@ -142,7 +142,7 @@ impl Database {
             header_hmac: Default::default(),
         };
         let keys = Keys::derive(main_password, &database.header)?;
-        database.save(output, &keys, &mut Default::default())
+        database.save(output, &keys, &mut DatabaseXML::empty()?)
     }
 
     pub fn get_kdf_parameters(&self) -> &KdfParameters {

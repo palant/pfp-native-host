@@ -81,6 +81,44 @@ impl DatabaseXML {
         Ok(Self { xml, inner_header })
     }
 
+    pub fn empty() -> Result<Self, Error> {
+        let xml = Element::parse(
+            format!(
+                r#"
+<KeePassFile>
+    <Meta>
+        <Generator>kdbx-native-host</Generator>
+        <DatabaseName>Passwords</DatabaseName>
+        <DatabaseDescription />
+        <MemoryProtection>
+            <ProtectTitle>False</ProtectTitle>
+            <ProtectUserName>False</ProtectUserName>
+            <ProtectPassword>True</ProtectPassword>
+            <ProtectURL>False</ProtectURL>
+            <ProtectNotes>False</ProtectNotes>
+        </MemoryProtection>
+    </Meta>
+    <Root>
+        <Group>
+            <UUID>{}</UUID>
+            <Name>Root</Name>
+            <IsExpanded>True</IsExpanded>
+            <EnableSearching>null</EnableSearching>
+        </Group>
+    </Root>
+</KeePassFile>
+        "#,
+                Entry::generate_uuid()?
+            )
+            .as_bytes(),
+        )?;
+
+        Ok(Self {
+            xml,
+            inner_header: Default::default(),
+        })
+    }
+
     pub fn save<W: Write>(&mut self, output: &mut W) -> Result<(), Error> {
         self.inner_header.reset_cipher()?;
         self.inner_header.serialize(output)?;
@@ -296,47 +334,6 @@ impl DatabaseXML {
         let mut aliases = self.get_aliases();
         if aliases.remove(alias).is_some() {
             self.set_aliases(aliases);
-        }
-    }
-}
-
-impl Default for DatabaseXML {
-    fn default() -> Self {
-        let xml = Element::parse(
-            format!(
-                r#"
-<KeePassFile>
-    <Meta>
-        <Generator>kdbx-native-host</Generator>
-        <DatabaseName>Passwords</DatabaseName>
-        <DatabaseDescription />
-        <MemoryProtection>
-            <ProtectTitle>False</ProtectTitle>
-            <ProtectUserName>False</ProtectUserName>
-            <ProtectPassword>True</ProtectPassword>
-            <ProtectURL>False</ProtectURL>
-            <ProtectNotes>False</ProtectNotes>
-        </MemoryProtection>
-    </Meta>
-    <Root>
-        <Group>
-            <UUID>{}</UUID>
-            <Name>Root</Name>
-            <IsExpanded>True</IsExpanded>
-            <EnableSearching>null</EnableSearching>
-        </Group>
-    </Root>
-</KeePassFile>
-        "#,
-                Entry::generate_uuid()
-            )
-            .as_bytes(),
-        )
-        .unwrap();
-
-        Self {
-            xml,
-            inner_header: Default::default(),
         }
     }
 }
