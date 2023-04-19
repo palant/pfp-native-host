@@ -18,6 +18,12 @@ impl std::fmt::Display for DatabaseVersion {
     }
 }
 
+impl Default for DatabaseVersion {
+    fn default() -> Self {
+        Self { major: 4, minor: 0 }
+    }
+}
+
 impl Serialize for DatabaseVersion {
     fn serialize<W: Write>(&self, output: &mut W) -> Result<(), Error> {
         SIGNATURE1.serialize(output)?;

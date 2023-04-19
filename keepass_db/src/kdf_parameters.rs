@@ -19,11 +19,36 @@ pub struct KdfParameters {
 }
 
 impl KdfParameters {
-    pub fn reset_salt(&mut self) -> Result<(), Error> {
+    pub fn generate(memory: u32, parallelism: u32, seconds: f32) -> Result<Self, Error> {
+        // KeePass recommends Argon2d over Argon2id, use this
+        let algorithm = argon2::Algorithm::Argon2d;
+        let version = argon2::Version::V0x13;
+        let size = 32;
+        let params = argon2::Params::new(memory, 1, parallelism, Some(size))?;
+        let hasher = argon2::Argon2::new(algorithm, version, params);
+
         let mut salt = Vec::new();
         salt.resize(SALT_SIZE, 0);
-        getrandom::getrandom(&mut salt).or(Err(Error::RandomNumberGeneratorFailed))?;
-        self.salt = salt;
+        let mut buffer = Vec::new();
+        buffer.resize(size, 0);
+
+        let start = std::time::Instant::now();
+        hasher.hash_password_into(b"dummy", &salt, &mut buffer)?;
+        let duration = start.elapsed();
+        let iterations = (seconds / duration.as_secs_f32()).ceil().max(1.0) as u32;
+
+        Ok(Self {
+            algorithm,
+            salt: crate::random::random_vec(SALT_SIZE)?,
+            version,
+            parallelism,
+            memory,
+            iterations,
+        })
+    }
+
+    pub fn reset_salt(&mut self) -> Result<(), Error> {
+        self.salt = crate::random::random_vec(SALT_SIZE)?;
         Ok(())
     }
 

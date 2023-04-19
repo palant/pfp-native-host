@@ -13,6 +13,7 @@ pub mod io;
 pub mod kdf_parameters;
 pub mod keys;
 mod numeric_enum;
+mod random;
 mod variant_field;
 mod variant_list;
 mod xml_helpers;

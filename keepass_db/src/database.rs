@@ -130,6 +130,21 @@ impl Database {
         Ok(())
     }
 
+    pub fn save_new<W: Write>(
+        output: &mut W,
+        main_password: &str,
+        kdf_parameters: KdfParameters,
+    ) -> Result<(), Error> {
+        let mut database = Self {
+            version: Default::default(),
+            header: OuterHeader::new(kdf_parameters)?,
+            header_data: Default::default(),
+            header_hmac: Default::default(),
+        };
+        let keys = Keys::derive(main_password, &database.header)?;
+        database.save(output, &keys, &mut Default::default())
+    }
+
     pub fn get_kdf_parameters(&self) -> &KdfParameters {
         &self.header.kdf_parameters
     }

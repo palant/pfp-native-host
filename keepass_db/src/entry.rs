@@ -39,9 +39,7 @@ fn serialize_hostname<S: Serializer>(url: &str, serializer: S) -> Result<S::Ok, 
 
 impl Entry {
     pub fn generate_uuid() -> String {
-        let mut buffer = Vec::new();
-        buffer.resize(16, 0);
-        getrandom::getrandom(&mut buffer).unwrap();
+        let buffer = crate::random::random_vec(16).unwrap();
 
         use base64::Engine;
         base64::engine::general_purpose::STANDARD.encode(buffer)

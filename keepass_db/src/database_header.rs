@@ -17,11 +17,21 @@ pub struct OuterHeader {
 }
 
 impl OuterHeader {
+    pub fn new(kdf_parameters: KdfParameters) -> Result<Self, Error> {
+        let cipher = BlockCipher::default();
+        let iv_size = cipher.iv_size();
+        Ok(Self {
+            cipher,
+            compression: Default::default(),
+            main_seed: crate::random::random_vec(32)?,
+            iv: crate::random::random_vec(iv_size)?,
+            kdf_parameters,
+            custom_data: Default::default(),
+        })
+    }
+
     pub fn reset_iv(&mut self) -> Result<(), Error> {
-        let mut iv = Vec::new();
-        iv.resize(self.cipher.iv_size(), 0);
-        getrandom::getrandom(&mut iv).or(Err(Error::RandomNumberGeneratorFailed))?;
-        self.iv = iv;
+        self.iv = crate::random::random_vec(self.cipher.iv_size())?;
         Ok(())
     }
 }
@@ -131,6 +141,7 @@ impl Deserialize for OuterHeader {
     }
 }
 
+#[derive(Debug, Default)]
 pub(crate) struct InnerHeader {
     pub cipher: StreamCipher,
     pub key: Vec<u8>,
@@ -140,21 +151,8 @@ pub(crate) struct InnerHeader {
 impl InnerHeader {
     pub fn reset_cipher(&mut self) -> Result<(), Error> {
         self.cipher = StreamCipher::ChaCha20;
-
-        self.key = Vec::new();
-        self.key.resize(self.cipher.key_size(), 0);
-        getrandom::getrandom(&mut self.key).or(Err(Error::RandomNumberGeneratorFailed))?;
-
+        self.key = crate::random::random_vec(self.cipher.key_size())?;
         Ok(())
-    }
-}
-
-impl std::fmt::Debug for InnerHeader {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fmt.debug_struct("InnerHeader")
-            .field("cipher", &self.cipher)
-            .field("binaries", &self.binaries)
-            .finish()
     }
 }
 

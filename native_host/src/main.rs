@@ -8,7 +8,7 @@ mod error;
 mod native_host;
 mod response;
 
-use dialoguer::{Input, Select};
+use dialoguer::{Input, Password, Select};
 use keepass_db::io::Deserialize;
 use keepass_db::Database;
 use std::path::PathBuf;
@@ -36,31 +36,82 @@ fn try_database(path: &PathBuf) -> bool {
     }
 }
 
+fn choose_path(save: bool) -> Result<PathBuf, Error> {
+    let dialog = native_dialog::FileDialog::new().add_filter("KeePass database", &["kdbx"]);
+    let result = if save {
+        dialog.show_save_single_file()
+    } else {
+        dialog.show_open_single_file()
+    };
+
+    match result {
+        Ok(Some(path)) => Ok(path),
+        Ok(None) => Err(Error::Aborted),
+        Err(native_dialog::Error::NoImplementation) => {
+            let input: String = Input::new()
+                .with_prompt("Please enter the database path")
+                .interact_text()?;
+            Ok(PathBuf::from(input))
+        }
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn create_database(path: &PathBuf) -> Result<(), Error> {
+    let mut memory = 1024 * 1024;
+    let mut parallelism = num_cpus::get() as u32;
+    let mut seconds = 1.0;
+    let selection = Select::new()
+        .with_prompt(format!("Use default key derivation parameters ({memory} KB, {parallelism} threads, {seconds} seconds to unlock)"))
+        .items(&["Yes", "No"])
+        .default(0)
+        .interact_opt()?
+        .ok_or(Error::Aborted)?;
+    if selection != 0 {
+        memory = Input::new()
+            .with_prompt(
+                "Enter the amount of memory in kB used for key derivation (more is better)",
+            )
+            .default(memory)
+            .interact_text()?;
+        parallelism = Input::new()
+            .with_prompt(
+                "Enter the number of parallel threads (ideally the number of your CPU cores)",
+            )
+            .default(parallelism)
+            .interact_text()?;
+        seconds = Input::new()
+            .with_prompt("Enter the time in seconds spent unlocking the database (more is better)")
+            .default(seconds)
+            .interact_text()?;
+    }
+    let kdf_parameters = keepass_db::KdfParameters::generate(memory, parallelism, seconds)?;
+
+    let main_password = Password::new()
+        .with_prompt("Main password for the database")
+        .with_confirmation("Confirm password", "Passwords don't match")
+        .interact()?;
+
+    let file = std::fs::File::create(path)?;
+    let mut writer = std::io::BufWriter::new(file);
+    keepass_db::Database::save_new(&mut writer, &main_password, kdf_parameters)?;
+    Ok(())
+}
+
 fn select_database() -> Result<(), Error> {
     let items = &["Select an existing database", "Create a new database"];
     let selection = Select::new()
-        .with_prompt("Please choose an action to configure kdbx-native-host")
+        .with_prompt("If you already have a KeePass database, this application can use it")
         .items(items)
         .default(0)
         .interact_opt()?
         .ok_or(Error::Aborted)?;
     if selection == 0 {
-        match native_dialog::FileDialog::new()
-            .add_filter("KeePass database", &["kdbx"])
-            .show_open_single_file()
-        {
-            Ok(Some(path)) => Config::set_database_path(path),
-            Ok(None) => Err(Error::Aborted),
-            Err(native_dialog::Error::NoImplementation) => {
-                let input: String = Input::new()
-                    .with_prompt("Please enter the database path")
-                    .interact_text()?;
-                Config::set_database_path(PathBuf::from(input))
-            }
-            Err(error) => Err(error.into()),
-        }
+        Config::set_database_path(choose_path(false)?)
     } else {
-        Ok(())
+        let path = choose_path(true)?;
+        create_database(&path)?;
+        Config::set_database_path(path)
     }
 }
 

@@ -30,7 +30,12 @@ impl Config {
     pub fn set_database_path(path: PathBuf) -> Result<(), Error> {
         let config_path = Self::config_path()?;
         let writer = std::fs::File::create(config_path)?;
-        serde_json::to_writer_pretty(writer, &Self { database: path })?;
+        serde_json::to_writer_pretty(
+            writer,
+            &Self {
+                database: path.canonicalize().unwrap_or(path),
+            },
+        )?;
         Ok(())
     }
 }

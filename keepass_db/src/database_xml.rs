@@ -299,3 +299,44 @@ impl DatabaseXML {
         }
     }
 }
+
+impl Default for DatabaseXML {
+    fn default() -> Self {
+        let xml = Element::parse(
+            format!(
+                r#"
+<KeePassFile>
+    <Meta>
+        <Generator>kdbx-native-host</Generator>
+        <DatabaseName>Passwords</DatabaseName>
+        <DatabaseDescription />
+        <MemoryProtection>
+            <ProtectTitle>False</ProtectTitle>
+            <ProtectUserName>False</ProtectUserName>
+            <ProtectPassword>True</ProtectPassword>
+            <ProtectURL>False</ProtectURL>
+            <ProtectNotes>False</ProtectNotes>
+        </MemoryProtection>
+    </Meta>
+    <Root>
+        <Group>
+            <UUID>{}</UUID>
+            <Name>Root</Name>
+            <IsExpanded>True</IsExpanded>
+            <EnableSearching>null</EnableSearching>
+        </Group>
+    </Root>
+</KeePassFile>
+        "#,
+                Entry::generate_uuid()
+            )
+            .as_bytes(),
+        )
+        .unwrap();
+
+        Self {
+            xml,
+            inner_header: Default::default(),
+        }
+    }
+}

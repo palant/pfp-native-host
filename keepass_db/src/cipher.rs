@@ -11,10 +11,11 @@ const UUID_CHACHA20: [u8; 16] = hex_literal::hex!("d6038a2b 8b6f 4cb5 a524 339a3
 const AES_BLOCK_SIZE: usize = 16;
 const TWOFISH_BLOCK_SIZE: usize = 16;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) enum BlockCipher {
     Aes256,
     Twofish,
+    #[default]
     ChaCha20,
 }
 
@@ -154,5 +155,11 @@ impl StreamCipher {
                 ))
             }
         }
+    }
+}
+
+impl Default for StreamCipher {
+    fn default() -> Self {
+        Self::ChaCha20
     }
 }
