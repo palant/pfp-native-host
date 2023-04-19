@@ -137,9 +137,10 @@ fn setup_database() -> Result<(), Error> {
 
             if selection != 0 || !try_database(&path) {
                 select_database()?;
-                return setup_database();
+                setup_database()
+            } else {
+                setup_browsers()
             }
-            setup_browsers()
         }
         None => {
             eprintln!("Database is not configured.");
