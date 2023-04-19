@@ -120,6 +120,7 @@ impl Deserialize for BlockCipher {
 numeric_enum!(StreamCipher=u32(UnsupportedStreamCipher)
 {
     Salsa20 = 2,
+    #[default]
     ChaCha20 = 3,
 });
 
@@ -155,11 +156,5 @@ impl StreamCipher {
                 ))
             }
         }
-    }
-}
-
-impl Default for StreamCipher {
-    fn default() -> Self {
-        Self::ChaCha20
     }
 }
