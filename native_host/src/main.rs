@@ -62,7 +62,7 @@ fn create_database(path: &PathBuf) -> Result<(), Error> {
     let mut parallelism = num_cpus::get() as u32;
     let mut seconds = 1.0;
     let selection = Select::new()
-        .with_prompt(format!("Use default key derivation parameters ({memory} MiB, {parallelism} threads, {seconds} seconds to unlock)"))
+        .with_prompt(format!("Use default key derivation parameters ({memory} MiB, {parallelism} threads, {seconds} second(s) to unlock)"))
         .items(&["Yes", "No"])
         .default(0)
         .interact_opt()?
@@ -96,10 +96,58 @@ fn create_database(path: &PathBuf) -> Result<(), Error> {
     }
     let kdf_parameters = keepass_db::KdfParameters::generate(memory * 1024, parallelism, seconds)?;
 
-    let main_password = Password::new()
-        .with_prompt("Main password for the database")
-        .with_confirmation("Confirm password", "Passwords don't match")
-        .interact()?;
+    let main_password = {
+        let selection = Select::new()
+            .with_prompt(
+                "It is recommended that you generate a random passphrase to protect the database",
+            )
+            .items(&["Generate passphrase", "Use own main password"])
+            .default(0)
+            .interact_opt()?
+            .ok_or(Error::Aborted)?;
+        if selection == 0 {
+            // By including the file as a string we waste a little memory when the passphrase is generated,
+            // but we save quite a bit on the binary size compared to having an array literal here.
+            const WORD_LIST: &str = include_str!("eff_short_wordlist_1.txt");
+
+            let size = Select::new()
+                .with_prompt("Please choose passphrase length")
+                .items(&["5 words (good)", "6 words (great)", "7 words (excellent)"])
+                .default(0)
+                .interact_opt()?
+                .ok_or(Error::Aborted)?
+                + 5;
+
+            let words = WORD_LIST.split(',').collect::<Vec<_>>();
+            let phrase = (0..size)
+                .map(|_| {
+                    let mut buffer = [0; usize::BITS as usize / 8];
+                    getrandom::getrandom(&mut buffer)
+                        .or(Err(keepass_db::Error::RandomNumberGeneratorFailed))?;
+                    Ok(words[usize::from_le_bytes(buffer) % words.len()])
+                })
+                .collect::<Result<Vec<_>, Error>>()?
+                .join(" ");
+            eprintln!("Your passphrase is: {phrase}");
+            loop {
+                let typed = Password::new()
+                    .with_prompt("Please try to type in this phrase")
+                    .interact()?;
+                if typed == phrase {
+                    eprintln!("Correct, creating a database protected with this passphrase now.");
+                    break;
+                } else {
+                    eprintln!("You appear to have mistyped the phrase, please try again.");
+                }
+            }
+            phrase
+        } else {
+            Password::new()
+                .with_prompt("Main password for the database")
+                .with_confirmation("Confirm password", "Passwords don't match")
+                .interact()?
+        }
+    };
 
     let file = std::fs::File::create(path)?;
     let mut writer = std::io::BufWriter::new(file);

@@ -12,6 +12,7 @@ base64 = "0.21.0"
 const_format = "0.2.30"
 dialoguer = "0.10.4"
 error_enum = { path = "../error_enum" }
+getrandom = "0.2.9"
 io-streams = "0.14.3"
 keepass_db = { path = "../keepass_db" }
 native-dialog = "0.6.3"
