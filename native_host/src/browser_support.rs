@@ -1,4 +1,4 @@
-const NATIVE_APP_ID: &str = "works.pfp.kdbx_native_host";
+const NATIVE_APP_ID: &str = "works.pfp.pfp_native_host";
 const CONFIG_FILE: &str = const_format::concatcp!(NATIVE_APP_ID, ".json");
 
 error_enum::declare! {

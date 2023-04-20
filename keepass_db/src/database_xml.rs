@@ -87,7 +87,7 @@ impl DatabaseXML {
                 r#"
 <KeePassFile>
     <Meta>
-        <Generator>kdbx-native-host</Generator>
+        <Generator>pfp-native-host</Generator>
         <DatabaseName>Passwords</DatabaseName>
         <DatabaseDescription />
         <MemoryProtection>

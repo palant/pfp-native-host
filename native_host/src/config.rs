@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use crate::error::Error;
 
 const APP_INFO: app_dirs2::AppInfo = app_dirs2::AppInfo {
-    name: "kdbx-native-host",
+    name: "pfp-native-host",
     author: "Wladimir Palant",
 };
 

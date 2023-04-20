@@ -665,25 +665,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
-name = "kdbx-native-host"
-version = "0.1.0"
-dependencies = [
- "app_dirs2",
- "base64",
- "const_format",
- "dialoguer",
- "error_enum",
- "getrandom",
- "io-streams",
- "keepass_db",
- "native-dialog",
- "num_cpus",
- "serde",
- "serde_json",
- "xmltree",
-]
-
-[[package]]
 name = "keepass_db"
 version = "0.1.0"
 dependencies = [
@@ -878,6 +859,25 @@ name = "percent-encoding"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
+
+[[package]]
+name = "pfp-native-host"
+version = "0.1.0"
+dependencies = [
+ "app_dirs2",
+ "base64",
+ "const_format",
+ "dialoguer",
+ "error_enum",
+ "getrandom",
+ "io-streams",
+ "keepass_db",
+ "native-dialog",
+ "num_cpus",
+ "serde",
+ "serde_json",
+ "xmltree",
+]
 
 [[package]]
 name = "proc-macro2"

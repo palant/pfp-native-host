@@ -1,10 +1,10 @@
 [package]
-name = "kdbx-native-host"
+name = "pfp-native-host"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "kdbx-native-host"
+name = "pfp-native-host"
 
 [dependencies]
 app_dirs2 = "2.5.5"
