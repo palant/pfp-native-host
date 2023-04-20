@@ -79,6 +79,8 @@ impl<'de> Deserialize<'de> for Action {
 
 #[derive(Deserialize, Debug)]
 pub(crate) enum Request {
+    #[serde(rename = "get-protocol")]
+    GetProtocol,
     #[serde(rename = "unlock")]
     Unlock(UnlockParameters),
     #[serde(rename = "get-entries")]
