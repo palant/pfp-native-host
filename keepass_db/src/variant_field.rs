@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use crate::io::{Deserialize, DeserializeWithSize, Serialize};
 use crate::{numeric_enum, Error};
 
-numeric_enum!{
+numeric_enum! {
     VariantType as u8 with error UnsupportedVariantType {
         EndOfList = 0x00,
         U32 = 0x04,

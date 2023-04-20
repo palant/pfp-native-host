@@ -1,6 +1,6 @@
 use crate::numeric_enum;
 
-numeric_enum!{
+numeric_enum! {
     OuterHeaderFieldType as u8 with error UnsupportedHeaderFieldType {
         EndOfHeader = 0,
         Comment = 1,
@@ -13,7 +13,7 @@ numeric_enum!{
     }
 }
 
-numeric_enum!{
+numeric_enum! {
     InnerHeaderFieldType as u8 with error UnsupportedHeaderFieldType {
         EndOfHeader = 0,
         StreamCipher = 1,

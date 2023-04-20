@@ -117,7 +117,7 @@ impl Deserialize for BlockCipher {
     }
 }
 
-numeric_enum!{
+numeric_enum! {
     #[derive(Default)]
     StreamCipher as u32 with error UnsupportedStreamCipher
     {

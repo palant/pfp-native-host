@@ -56,9 +56,7 @@ fn save_database(
 
 pub(crate) fn handle(action: Action) -> Result<Response, Error> {
     match action.request {
-        Request::GetProtocol => {
-            Ok(Response::String("1.0".to_string()))
-        }
+        Request::GetProtocol => Ok(Response::String("1.0".to_string())),
         Request::Unlock(params) => {
             let mut input = get_input()?;
             let database = Database::deserialize(&mut input)?;
