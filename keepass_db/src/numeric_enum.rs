@@ -1,18 +1,21 @@
 macro_rules! numeric_enum {
-    ($name:ident = $type:ident($error:ident) {
+    (
+        $(#[$($type_meta:tt)*])*
+        $name:ident = $type:ident($error:ident) {
         $(
-            $(#[$meta:ident])*
+            $(#[$($meta:tt)*])*
             $variant:ident = $value:literal,
         )*
     }) => {
-        $($(
-            numeric_enum!{@ignore $meta}
-            #[derive(Default)]
-        )*)*
+        $(
+            #[$($type_meta)*]
+        )*
         #[derive(Debug)]
         pub(crate) enum $name {
             $(
-                $(#[$meta])*
+                $(
+                    #[$($meta)*]
+                )*
                 $variant,
             )+
         }
@@ -55,8 +58,7 @@ macro_rules! numeric_enum {
                 $type::deserialize(input)?.try_into()
             }
         }
-    };
-    {@ignore $var:ident} => {};
+    }
 }
 
 pub(crate) use numeric_enum;

@@ -117,12 +117,15 @@ impl Deserialize for BlockCipher {
     }
 }
 
-numeric_enum!(StreamCipher=u32(UnsupportedStreamCipher)
-{
-    Salsa20 = 2,
-    #[default]
-    ChaCha20 = 3,
-});
+numeric_enum!(
+    #[derive(Default)]
+    StreamCipher=u32(UnsupportedStreamCipher)
+    {
+        Salsa20 = 2,
+        #[default]
+        ChaCha20 = 3,
+    }
+);
 
 impl StreamCipher {
     pub fn key_size(&self) -> usize {
