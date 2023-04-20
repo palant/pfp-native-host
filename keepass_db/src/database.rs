@@ -80,6 +80,10 @@ impl Database {
     }
 
     pub fn decrypt<R: Read>(&self, input: &mut R, keys: &Keys) -> Result<DatabaseXML, Error> {
+        if self.get_header_hmac(keys) != self.header_hmac {
+            return Err(Error::InvalidCredentials);
+        }
+
         let mut hmac_reader = HmacBlockStreamReader::new(input, keys);
 
         // TODO: Do this in a "streamed" fashion
