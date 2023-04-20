@@ -1,12 +1,13 @@
 macro_rules! numeric_enum {
-    (
+    {
         $(#[$($type_meta:tt)*])*
-        $name:ident = $type:ident($error:ident) {
-        $(
-            $(#[$($meta:tt)*])*
-            $variant:ident = $value:literal,
-        )*
-    }) => {
+        $name:ident as $type:ident with error $error:ident {
+            $(
+                $(#[$($meta:tt)*])*
+                $variant:ident = $value:literal,
+            )*
+        }
+    } => {
         $(
             #[$($type_meta)*]
         )*

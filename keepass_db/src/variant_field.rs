@@ -3,16 +3,18 @@ use std::io::{Read, Write};
 use crate::io::{Deserialize, DeserializeWithSize, Serialize};
 use crate::{numeric_enum, Error};
 
-numeric_enum!(VariantType=u8(UnsupportedVariantType) {
-    EndOfList = 0x00,
-    U32 = 0x04,
-    U64 = 0x05,
-    Bool = 0x08,
-    I32 = 0x0C,
-    I64 = 0x0D,
-    String = 0x18,
-    Bytes = 0x42,
-});
+numeric_enum!{
+    VariantType as u8 with error UnsupportedVariantType {
+        EndOfList = 0x00,
+        U32 = 0x04,
+        U64 = 0x05,
+        Bool = 0x08,
+        I32 = 0x0C,
+        I64 = 0x0D,
+        String = 0x18,
+        Bytes = 0x42,
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) enum VariantValue {

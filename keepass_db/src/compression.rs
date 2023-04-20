@@ -1,10 +1,10 @@
 use crate::numeric_enum;
 
-numeric_enum!(
+numeric_enum!{
     #[derive(Default)]
-    Compression=u32(UnsupportedCompression) {
+    Compression as u32 with error UnsupportedCompression {
         None = 0,
         #[default]
         Gzip = 1,
     }
-);
+}
