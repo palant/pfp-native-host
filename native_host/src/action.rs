@@ -78,34 +78,21 @@ impl<'de> Deserialize<'de> for Action {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
 pub(crate) enum Request {
-    #[serde(rename = "get-protocol")]
     GetProtocol,
-    #[serde(rename = "unlock")]
     Unlock(UnlockParameters),
-    #[serde(rename = "get-entries")]
     GetEntries(GetEntriesParameters),
-    #[serde(rename = "get-all-entries")]
     GetAllEntries(GetAllEntriesParameters),
-    #[serde(rename = "get-sites")]
     GetSites(GetSitesParameters),
-    #[serde(rename = "add-entry")]
     AddEntry(AddEntryParameters),
-    #[serde(rename = "update-entry")]
     UpdateEntry(UpdateEntryParameters),
-    #[serde(rename = "duplicate-entry")]
     DuplicateEntry(DuplicateEntryParameters),
-    #[serde(rename = "remove-entry")]
     RemoveEntry(RemoveEntryParameters),
-    #[serde(rename = "duplicate-kdf-parameters")]
-    DuplicateKDFParameters,
-    #[serde(rename = "derive-key")]
+    DuplicateKdfParameters,
     DeriveKey(DeriveKeyParameters),
-    #[serde(rename = "add-alias")]
     AddAlias(AddAliasParameters),
-    #[serde(rename = "remove-alias")]
     RemoveAlias(RemoveAliasParameters),
-    #[serde(rename = "set-aliases")]
     SetAliases(SetAliasesParameters),
 }
 

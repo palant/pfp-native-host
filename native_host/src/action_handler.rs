@@ -181,7 +181,7 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             save_database(&mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
-        Request::DuplicateKDFParameters => {
+        Request::DuplicateKdfParameters => {
             let mut input = get_input()?;
             let database = Database::deserialize(&mut input)?;
             let mut parameters = database.get_kdf_parameters().clone();
