@@ -47,7 +47,7 @@ pub(crate) fn run_server() -> Result<(), Error> {
                         Err(error) => error_response(request_id, error),
                     }
                 }
-                Err(_) => error_response(String::from(""), Error::InvalidMessage),
+                Err(error) => error_response(String::from(""), Error::Json(error)),
             }
         };
 
