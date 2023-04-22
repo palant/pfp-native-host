@@ -336,4 +336,42 @@ impl DatabaseXML {
             self.set_aliases(aliases);
         }
     }
+
+    pub fn import(
+        &mut self,
+        entries: Vec<Entry>,
+        aliases: HashMap<String, String>,
+        protected: &HashSet<&str>,
+    ) -> Result<(), Error> {
+        let mut map = entries
+            .into_iter()
+            .map(|e| ((e.hostname(), e.title.clone()), e))
+            .collect::<HashMap<_, _>>();
+
+        let group = self.get_root_group_mut().ok_or(Error::MissingRootGroup)?;
+        group
+            .modifier()
+            .recurse_if(is_group)
+            .accept_if(is_entry)
+            .modify(|element| -> Result<_, Error> {
+                if let Some(entry) = Entry::from_xml(element) {
+                    if let Some(mut new_entry) = map.remove(&(entry.hostname(), entry.title)) {
+                        new_entry.uuid = entry.uuid;
+                        new_entry.tags = entry.tags;
+                        new_entry.update_xml(element, protected);
+                    }
+                }
+                Ok(())
+            })?;
+
+        for entry in map.values() {
+            group.children.push(entry.to_xml(protected));
+        }
+
+        let mut existing_aliases = self.get_aliases();
+        existing_aliases.extend(aliases);
+        self.set_aliases(existing_aliases);
+
+        Ok(())
+    }
 }

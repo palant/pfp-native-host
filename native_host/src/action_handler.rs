@@ -227,5 +227,24 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             save_database(&mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
+        Request::Import(params) => {
+            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let entries = params
+                .entries
+                .into_iter()
+                .map(|e| -> Result<_, Error> {
+                    let url = "https://".to_string() + &e.hostname;
+                    let mut entry = Entry::new(&url, &e.title, &e.username, &e.password)?;
+                    entry.notes = e.notes;
+                    Ok(entry)
+                })
+                .collect::<Result<_, _>>()?;
+
+            let protected = database_xml.get_protected_fields();
+            database_xml.import(entries, params.aliases, &protected)?;
+
+            save_database(&mut database, &mut database_xml, &keys)?;
+            Ok(Response::None)
+        }
     }
 }

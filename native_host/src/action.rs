@@ -94,6 +94,7 @@ pub(crate) enum Request {
     AddAlias(AddAliasParameters),
     RemoveAlias(RemoveAliasParameters),
     SetAliases(SetAliasesParameters),
+    Import(ImportParameters),
 }
 
 #[derive(Deserialize, Debug)]
@@ -184,4 +185,22 @@ pub(crate) struct RemoveAliasParameters {
 pub(crate) struct SetAliasesParameters {
     pub keys: Vec<String>,
     pub aliases: std::collections::HashMap<String, String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ImportParameters {
+    pub keys: Vec<String>,
+    pub aliases: std::collections::HashMap<String, String>,
+    pub entries: Vec<ImportEntry>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ImportEntry {
+    pub hostname: String,
+    pub title: String,
+    pub username: String,
+    pub password: String,
+    pub notes: Option<String>,
 }
