@@ -12,7 +12,7 @@ impl<'de> Deserialize<'de> for Action {
         impl<'de> serde::de::Visitor<'de> for MapVisitor {
             type Value = Action;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(formatter, "action structure")
             }
 

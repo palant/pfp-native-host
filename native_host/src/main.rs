@@ -1,4 +1,21 @@
-#![feature(trace_macros)]
+#![deny(elided_lifetimes_in_paths)]
+#![deny(explicit_outlives_requirements)]
+#![deny(keyword_idents)]
+#![deny(meta_variable_misuse)]
+#![deny(missing_debug_implementations)]
+#![deny(non_ascii_idents)]
+#![warn(noop_method_call)]
+#![deny(pointer_structural_match)]
+#![deny(single_use_lifetimes)]
+#![deny(trivial_casts)]
+#![deny(trivial_numeric_casts)]
+#![deny(unsafe_code)]
+#![deny(unused_crate_dependencies)]
+#![deny(unused_import_braces)]
+#![deny(unused_lifetimes)]
+#![warn(unused_macro_rules)]
+#![warn(unused_tuple_struct_fields)]
+#![deny(variant_size_differences)]
 
 mod action;
 mod action_handler;

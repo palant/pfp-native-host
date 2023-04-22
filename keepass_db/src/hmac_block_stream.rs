@@ -50,7 +50,7 @@ impl<'a, R: Read> HmacBlockStreamReader<'a, R> {
     }
 }
 
-impl<'a, R: Read> Read for HmacBlockStreamReader<'a, R> {
+impl<R: Read> Read for HmacBlockStreamReader<'_, R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         if self.current.is_none() {
             self.next_block()?;
@@ -114,7 +114,7 @@ impl<'a, W: Write> HmacBlockStreamWriter<'a, W> {
     }
 }
 
-impl<'a, W: Write> Write for HmacBlockStreamWriter<'a, W> {
+impl<W: Write> Write for HmacBlockStreamWriter<'_, W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let remaining = BLOCK_SIZE - self.current.len();
         if buf.len() < remaining {

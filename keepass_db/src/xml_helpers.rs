@@ -5,10 +5,10 @@ pub(crate) trait XMLHelpers {
     fn index_of<P>(&self, predicate: P) -> Option<usize>
     where
         P: Fn(&Element) -> bool;
-    fn elements(&self) -> ElementIterator;
+    fn elements(&self) -> ElementIterator<'_>;
     fn elements_mut(&mut self) -> Box<dyn Iterator<Item = &mut Element> + '_>;
-    fn elements_recursive(&self) -> ElementIterator;
-    fn modifier(&mut self) -> ElementModifier;
+    fn elements_recursive(&self) -> ElementIterator<'_>;
+    fn modifier(&mut self) -> ElementModifier<'_>;
     fn text_content(&self) -> Cow<'_, str>;
     fn set_text_content(&mut self, text: Cow<'_, str>);
     fn to_boolean(&self) -> Option<bool>;
@@ -34,7 +34,7 @@ impl XMLHelpers for Element {
         None
     }
 
-    fn elements(&self) -> ElementIterator {
+    fn elements(&self) -> ElementIterator<'_> {
         ElementIterator::new(self).recurse_if(|_| false)
     }
 
@@ -46,11 +46,11 @@ impl XMLHelpers for Element {
         )
     }
 
-    fn elements_recursive(&self) -> ElementIterator {
+    fn elements_recursive(&self) -> ElementIterator<'_> {
         ElementIterator::new(self)
     }
 
-    fn modifier(&mut self) -> ElementModifier {
+    fn modifier(&mut self) -> ElementModifier<'_> {
         ElementModifier::new(self)
     }
 

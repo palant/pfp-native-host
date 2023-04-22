@@ -18,7 +18,7 @@ macro_rules! numeric_enum {
                     #[$($meta)*]
                 )*
                 $variant,
-            )+
+            )*
         }
 
         impl $name {
@@ -31,7 +31,7 @@ macro_rules! numeric_enum {
                 match value {
                     $(
                         $name::$variant => $value,
-                    )+
+                    )*
                 }
             }
         }
@@ -42,7 +42,7 @@ macro_rules! numeric_enum {
                 match value {
                     $(
                         $value => Ok($name::$variant),
-                    )+
+                    )*
                     _ => Err(Self::Error::$error(value)),
                 }
             }

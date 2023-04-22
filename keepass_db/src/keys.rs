@@ -7,6 +7,7 @@ use crate::{Error, OuterHeader};
 const KEY_SIZE: usize = 32;
 const HMAC_SIZE: usize = 64;
 
+#[derive(Debug)]
 pub struct Keys {
     pub encryption: Vec<u8>,
     hmac: Vec<u8>,
