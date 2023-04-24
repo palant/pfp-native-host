@@ -250,7 +250,7 @@ fn setup_browsers() -> Result<(), Error> {
 
 fn main_inner() -> Result<(), Error> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() >= 2 && args[1].contains("://") {
+    if args.len() >= 2 {
         native_host::run_server()
     } else {
         setup_database()
