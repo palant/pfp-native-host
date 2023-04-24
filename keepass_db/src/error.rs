@@ -2,9 +2,10 @@ error_enum::declare! {
     pub enum Error {
         Io(std::io::Error),
         Encoding(std::string::FromUtf8Error),
-        KeyDerivation(argon2::Error),
         XMLParsing(xmltree::ParseError),
         XMLSerialization(xmltree::Error),
+        ///Key derivation failed
+        KeyDerivation,
         ///The database file is either corrupt or not a supported KeePass database
         CorruptDatabase,
         ///Database version {} is not supported

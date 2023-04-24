@@ -10,7 +10,7 @@ const SALT_SIZE: usize = 16;
 
 #[derive(Clone, Debug)]
 pub struct KdfParameters {
-    pub algorithm: argon2::Algorithm,
+    pub algorithm: argon2::Variant,
     pub salt: Vec<u8>,
     pub version: argon2::Version,
     pub parallelism: u32,
@@ -21,19 +21,25 @@ pub struct KdfParameters {
 impl KdfParameters {
     pub fn generate(memory: u32, parallelism: u32, seconds: f32) -> Result<Self, Error> {
         // KeePass recommends Argon2d over Argon2id, use this
-        let algorithm = argon2::Algorithm::Argon2d;
-        let version = argon2::Version::V0x13;
+        let algorithm = argon2::Variant::D;
+        let version = argon2::Version::Version13;
         let size = 32;
-        let params = argon2::Params::new(memory, 1, parallelism, Some(size))?;
-        let hasher = argon2::Argon2::new(algorithm, version, params);
 
-        let mut salt = Vec::new();
-        salt.resize(SALT_SIZE, 0);
-        let mut buffer = Vec::new();
-        buffer.resize(size, 0);
+        let salt = vec![0; SALT_SIZE];
+        let mut buffer = vec![0; size];
 
         let start = std::time::Instant::now();
-        hasher.hash_password_into(b"dummy", &salt, &mut buffer)?;
+        argon2::hash(
+            1,
+            memory,
+            parallelism,
+            Some(b"dummy"),
+            Some(&salt),
+            Some(&mut buffer),
+            None,
+            algorithm,
+            version,
+        ).map_err(|_| Error::KeyDerivation)?;
         let duration = start.elapsed();
         let iterations = (seconds / duration.as_secs_f32()).ceil().max(1.0) as u32;
 
@@ -53,13 +59,18 @@ impl KdfParameters {
     }
 
     pub fn derive_key(&self, password: &[u8], size: usize) -> Result<Vec<u8>, Error> {
-        let params =
-            argon2::Params::new(self.memory, self.iterations, self.parallelism, Some(size))?;
-        let hasher = argon2::Argon2::new(self.algorithm, self.version, params);
-
-        let mut buffer = Vec::new();
-        buffer.resize(size, 0);
-        hasher.hash_password_into(password, &self.salt, &mut buffer)?;
+        let mut buffer = vec![0; size];
+        argon2::hash(
+            self.iterations,
+            self.memory,
+            self.parallelism,
+            Some(password),
+            Some(&self.salt),
+            Some(&mut buffer),
+            None,
+            self.algorithm,
+            self.version,
+        ).map_err(|_| Error::KeyDerivation)?;
         Ok(buffer)
     }
 }
@@ -68,16 +79,16 @@ impl From<&KdfParameters> for VariantList {
     fn from(value: &KdfParameters) -> Self {
         let mut list = VariantList::new();
         match value.algorithm {
-            argon2::Algorithm::Argon2d => {
+            argon2::Variant::D => {
                 list.add("$UUID", VariantValue::Bytes(UUID_ARGON2D.to_vec()))
             }
-            argon2::Algorithm::Argon2id => {
+            argon2::Variant::ID => {
                 list.add("$UUID", VariantValue::Bytes(UUID_ARGON2ID.to_vec()))
             }
             _ => panic!("Unexpected KDF algorithm configured"),
         };
         list.add("S", VariantValue::Bytes(value.salt.clone()));
-        list.add("V", VariantValue::U32(value.version.into()));
+        list.add("V", VariantValue::U32(value.version.to_int()));
         list.add("P", VariantValue::U32(value.parallelism));
         list.add("M", VariantValue::U64(value.memory as u64 * 1024));
         list.add("I", VariantValue::U64(value.iterations as u64));
@@ -99,15 +110,14 @@ impl TryFrom<VariantList> for KdfParameters {
         }
 
         let algorithm = match get_field!(Bytes, "$UUID").as_slice() {
-            UUID_ARGON2D => argon2::Algorithm::Argon2d,
-            UUID_ARGON2ID => argon2::Algorithm::Argon2id,
+            UUID_ARGON2D => argon2::Variant::D,
+            UUID_ARGON2ID => argon2::Variant::ID,
             UUID_AESKDF => return Err(Error::AesKDFUnsupported),
             _ => return Err(Error::UnsupportedKDF),
         };
         let salt = get_field!(Bytes, "S");
-        let version = get_field!(U32, "V")
-            .try_into()
-            .map_err(|_| Error::UnsupportedKDF)?;
+        let version = argon2::Version::from_int(get_field!(U32, "V"))
+            .ok_or(Error::UnsupportedKDF)?;
         let parallelism = get_field!(U32, "P");
         let memory = (get_field!(U64, "M") / 1024)
             .try_into()
@@ -135,16 +145,16 @@ impl Serialize for KdfParameters {
         bits.write(
             2,
             match self.algorithm {
-                argon2::Algorithm::Argon2d => 0,
-                argon2::Algorithm::Argon2i => 1,
-                argon2::Algorithm::Argon2id => 2,
+                argon2::Variant::D => 0,
+                argon2::Variant::I => 1,
+                argon2::Variant::ID => 2,
             },
         )?;
         bits.write(
             1,
             match self.version {
-                argon2::Version::V0x10 => 0,
-                argon2::Version::V0x13 => 1,
+                argon2::Version::Version10 => 0,
+                argon2::Version::Version13 => 1,
             },
         )?;
 
@@ -180,15 +190,15 @@ impl Deserialize for KdfParameters {
         let mut bits = BitReader::endian(input, BigEndian);
 
         let algorithm = match bits.read(2)? {
-            0 => argon2::Algorithm::Argon2d,
-            1 => argon2::Algorithm::Argon2i,
-            2 => argon2::Algorithm::Argon2id,
+            0 => argon2::Variant::D,
+            1 => argon2::Variant::I,
+            2 => argon2::Variant::ID,
             _ => return Err(Error::UnsupportedKDF),
         };
 
         let version = match bits.read(1)? {
-            0 => argon2::Version::V0x10,
-            1 => argon2::Version::V0x13,
+            0 => argon2::Version::Version10,
+            1 => argon2::Version::Version13,
             _ => return Err(Error::UnsupportedKDF),
         };
 
