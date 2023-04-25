@@ -10,7 +10,7 @@
 #![deny(trivial_casts)]
 #![deny(trivial_numeric_casts)]
 #![deny(unsafe_code)]
-#![deny(unused_crate_dependencies)]
+#![warn(unused_crate_dependencies)]
 #![deny(unused_import_braces)]
 #![deny(unused_lifetimes)]
 #![warn(unused_macro_rules)]
