@@ -35,10 +35,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Install latest nightly
+    - name: Install toolchain
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: nightly
+          toolchain: ${{ matrix.toolchain }}
           profile: minimal
           components: rust-src
     - uses: actions/cache@v3
@@ -51,7 +51,7 @@ jobs:
           target/
         key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.toolchain }}
     - name: Build
-      run: cargo +nightly build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
+      run: cargo build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
       uses: actions/upload-artifact@v2
       with:
