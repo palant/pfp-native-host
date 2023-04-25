@@ -45,11 +45,11 @@ jobs:
           target/
         key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
-      run: cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target $target --release --verbose
+      run: cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
       uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.target_name }} ${{ matrix.os }}
-        path: target/$target/release/${{ matrix.target_name }}
+        path: target/${{ matrix.target }}/release/${{ matrix.target_name }}
     - name: Run tests
       run: cargo test --verbose
