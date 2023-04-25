@@ -42,16 +42,6 @@ jobs:
       with:
           toolchain: ${{ matrix.toolchain }}
           components: rust-src
-          cache: false
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.toolchain }}
     - name: Build
       run: cargo +${{ matrix.toolchain }} build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
