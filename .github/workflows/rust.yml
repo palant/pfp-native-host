@@ -53,7 +53,7 @@ jobs:
     - name: Build
       run: cargo +${{ matrix.toolchain }} build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.target_name }} ${{ matrix.os }} ${{ matrix.toolchain }}
         path: target/${{ matrix.target }}/release/${{ matrix.target_name }}
