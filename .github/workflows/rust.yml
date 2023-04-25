@@ -36,10 +36,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install toolchain
-      uses: actions-rs/toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
           toolchain: ${{ matrix.toolchain }}
-          profile: minimal
           components: rust-src
     - uses: actions/cache@v3
       with:
