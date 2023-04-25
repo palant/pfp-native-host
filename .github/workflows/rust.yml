@@ -1,0 +1,50 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+          target_name: pfp-native-host
+#        - os: windows-latest
+#          target: x86_64-pc-windows-msvc
+#          target_name: pfp-native-host.exe
+        - os: macos-latest
+          target: x86_64-apple-darwin
+          target_name: pfp-native-host
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build
+      run: cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target $target --release --verbose
+    - name: Upload pfp-native-host artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.target_name }} ${{ matrix.os }}
+        path: target/$target/release/${{ matrix.target_name }}
+    - name: Run tests
+      run: cargo test --verbose
