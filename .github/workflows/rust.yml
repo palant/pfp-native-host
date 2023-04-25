@@ -40,6 +40,7 @@ jobs:
       with:
           toolchain: ${{ matrix.toolchain }}
           components: rust-src
+          cache: false
     - uses: actions/cache@v3
       with:
         path: |
