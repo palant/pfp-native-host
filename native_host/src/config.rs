@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use crate::error::Error;
 
-const APP_INFO: app_dirs2::AppInfo = app_dirs2::AppInfo {
+pub(crate) const APP_INFO: app_dirs2::AppInfo = app_dirs2::AppInfo {
     name: "pfp-native-host",
     author: "Wladimir Palant",
 };

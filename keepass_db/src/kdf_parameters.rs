@@ -39,7 +39,8 @@ impl KdfParameters {
             None,
             algorithm,
             version,
-        ).map_err(|_| Error::KeyDerivation)?;
+        )
+        .map_err(|_| Error::KeyDerivation)?;
         let duration = start.elapsed();
         let iterations = (seconds / duration.as_secs_f32()).ceil().max(1.0) as u32;
 
@@ -70,7 +71,8 @@ impl KdfParameters {
             None,
             self.algorithm,
             self.version,
-        ).map_err(|_| Error::KeyDerivation)?;
+        )
+        .map_err(|_| Error::KeyDerivation)?;
         Ok(buffer)
     }
 }
@@ -79,12 +81,8 @@ impl From<&KdfParameters> for VariantList {
     fn from(value: &KdfParameters) -> Self {
         let mut list = VariantList::new();
         match value.algorithm {
-            argon2::Variant::D => {
-                list.add("$UUID", VariantValue::Bytes(UUID_ARGON2D.to_vec()))
-            }
-            argon2::Variant::ID => {
-                list.add("$UUID", VariantValue::Bytes(UUID_ARGON2ID.to_vec()))
-            }
+            argon2::Variant::D => list.add("$UUID", VariantValue::Bytes(UUID_ARGON2D.to_vec())),
+            argon2::Variant::ID => list.add("$UUID", VariantValue::Bytes(UUID_ARGON2ID.to_vec())),
             _ => panic!("Unexpected KDF algorithm configured"),
         };
         list.add("S", VariantValue::Bytes(value.salt.clone()));
@@ -116,8 +114,8 @@ impl TryFrom<VariantList> for KdfParameters {
             _ => return Err(Error::UnsupportedKDF),
         };
         let salt = get_field!(Bytes, "S");
-        let version = argon2::Version::from_int(get_field!(U32, "V"))
-            .ok_or(Error::UnsupportedKDF)?;
+        let version =
+            argon2::Version::from_int(get_field!(U32, "V")).ok_or(Error::UnsupportedKDF)?;
         let parallelism = get_field!(U32, "P");
         let memory = (get_field!(U64, "M") / 1024)
             .try_into()

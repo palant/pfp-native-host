@@ -1,4 +1,6 @@
 const NATIVE_APP_ID: &str = "works.pfp.pfp_native_host";
+
+#[cfg(unix)]
 const CONFIG_FILE: &str = const_format::concatcp!(NATIVE_APP_ID, ".json");
 
 error_enum::declare! {
@@ -138,6 +140,21 @@ impl Browser {
         Ok(root)
     }
 
+    #[cfg(windows)]
+    fn get_registry_key(&self) -> String {
+        match self {
+            Self::Firefox => "Software\\Mozilla\\NativeMessagingHosts",
+            Self::Chrome | Self::Opera | Self::Vivaldi => {
+                "Software\\Google\\Chrome\\NativeMessagingHosts"
+            }
+            Self::Chromium => "Software\\Chromium\\NativeMessagingHosts",
+            Self::Edge => "Software\\Microsoft\\Edge\\NativeMessagingHosts",
+        }
+        .to_string()
+            + "\\"
+            + NATIVE_APP_ID
+    }
+
     #[cfg(unix)]
     fn get_config_path(&self, path: &str) -> Result<std::path::PathBuf, BrowserSetupError> {
         let mut result = self.get_config_root()?;
@@ -156,9 +173,22 @@ impl Browser {
         }
     }
 
-    #[cfg(unix)]
-    pub fn configure(&self, extension_id: &str) -> Result<(), BrowserSetupError> {
-        let path = self.get_config_path(CONFIG_FILE)?;
+    #[cfg(windows)]
+    pub fn is_configured(&self) -> bool {
+        let key = match winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+            .open_subkey(self.get_registry_key())
+        {
+            Ok(key) => key,
+            Err(_) => return false,
+        };
+        key.get_value::<std::ffi::OsString, _>("").is_ok()
+    }
+
+    fn write_config(
+        &self,
+        path: &std::path::PathBuf,
+        extension_id: &str,
+    ) -> Result<(), BrowserSetupError> {
         let executable = std::env::current_exe()?;
         let executable_path = executable
             .as_os_str()
@@ -184,6 +214,26 @@ impl Browser {
             }),
         )?;
         Ok(())
+    }
+
+    #[cfg(windows)]
+    pub fn configure(&self, extension_id: &str) -> Result<(), BrowserSetupError> {
+        let mut path =
+            app_dirs2::app_root(app_dirs2::AppDataType::UserConfig, &crate::config::APP_INFO)
+                .or(Err(BrowserSetupError::NoHomeDirectory))?;
+        path.push("native_host.json");
+        self.write_config(&path, extension_id)?;
+
+        let (key, _) = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+            .create_subkey(self.get_registry_key())?;
+        key.set_value("", &path.as_os_str())?;
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    pub fn configure(&self, extension_id: &str) -> Result<(), BrowserSetupError> {
+        let path = self.get_config_path(CONFIG_FILE)?;
+        self.write_config(&path, extension_id)
     }
 
     pub fn extension_id(&self) -> &'static str {

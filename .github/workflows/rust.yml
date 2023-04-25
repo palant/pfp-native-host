@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         toolchain: [nightly, stable]
         include:
         - toolchain: nightly
@@ -26,9 +26,9 @@ jobs:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
           target_name: pfp-native-host
-#        - os: windows-latest
-#          target: x86_64-pc-windows-msvc
-#          target_name: pfp-native-host.exe
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+          target_name: pfp-native-host.exe
         - os: macos-latest
           target: x86_64-apple-darwin
           target_name: pfp-native-host
