@@ -51,7 +51,7 @@ jobs:
           target/
         key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.toolchain }}
     - name: Build
-      run: cargo build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
+      run: cargo +${{ matrix.toolchain }} build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
       uses: actions/upload-artifact@v2
       with:
