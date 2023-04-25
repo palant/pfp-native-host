@@ -17,7 +17,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        toolchain: [nightly, stable]
         include:
+        - toolchain: nightly
+          flags: -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+        - toolchain: stable
+          flags:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
           target_name: pfp-native-host
@@ -44,13 +49,13 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.toolchain }}
     - name: Build
-      run: cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ matrix.target }} --release --verbose
+      run: cargo +nightly build ${{ matrix.flags }} --target ${{ matrix.target }} --release --verbose
     - name: Upload pfp-native-host artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.target_name }} ${{ matrix.os }}
+        name: ${{ matrix.target_name }} ${{ matrix.os }} ${{ matrix.toolchain }}
         path: target/${{ matrix.target }}/release/${{ matrix.target_name }}
     - name: Run tests
       run: cargo test --verbose
