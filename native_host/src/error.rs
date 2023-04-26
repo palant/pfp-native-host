@@ -3,8 +3,9 @@ error_enum::declare! {
         Db(keepass_db::Error{std::io::Error, xmltree::Error}),
         Json(serde_json::Error),
         BrowserSetup(crate::browser_support::BrowserSetupError),
-        AppDir(app_dirs2::AppDirsError),
         Dialog(native_dialog::Error),
+        ///Failed determining location of the configuration file
+        UnknownConfigLocation,
         ///A database file has not been configured
         Unconfigured,
         ///Message could not be processed

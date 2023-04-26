@@ -218,10 +218,10 @@ impl Browser {
 
     #[cfg(windows)]
     pub fn configure(&self, extension_id: &str) -> Result<(), BrowserSetupError> {
-        let mut path =
-            app_dirs2::app_root(app_dirs2::AppDataType::UserConfig, &crate::config::APP_INFO)
-                .or(Err(BrowserSetupError::NoHomeDirectory))?;
-        path.push("native_host.json");
+        let mut path = std::env::current_exe()
+            .or(Err(Error::UnknownConfigLocation))?;
+        path.pop();
+        path.push("pfp-native-host.json");
         self.write_config(&path, extension_id)?;
 
         let (key, _) = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)

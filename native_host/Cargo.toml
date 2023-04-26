@@ -7,7 +7,6 @@ edition = "2021"
 name = "pfp-native-host"
 
 [dependencies]
-app_dirs2 = "2.5.5"
 base64 = "0.21.0"
 dialoguer = "0.10.4"
 error_enum = { path = "../error_enum" }

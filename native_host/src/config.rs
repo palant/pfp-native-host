@@ -3,11 +3,6 @@ use std::path::PathBuf;
 
 use crate::error::Error;
 
-pub(crate) const APP_INFO: app_dirs2::AppInfo = app_dirs2::AppInfo {
-    name: "pfp-native-host",
-    author: "Wladimir Palant",
-};
-
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Config {
     database: PathBuf,
@@ -15,8 +10,10 @@ pub(crate) struct Config {
 
 impl Config {
     fn config_path() -> Result<PathBuf, Error> {
-        let mut path = app_dirs2::app_root(app_dirs2::AppDataType::UserConfig, &APP_INFO)?;
-        path.push("config.json");
+        let mut path = std::env::current_exe()
+            .or(Err(Error::UnknownConfigLocation))?;
+        path.pop();
+        path.push("pfp-native-host-config.json");
         Ok(path)
     }
 
