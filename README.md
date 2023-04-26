@@ -29,8 +29,8 @@ Additional functionality
 
 KeePass databases don’t usually support website aliases. So aliases are stored in an item named `PFP_ALIASES` under `<CustomData>`.
 
-Added constrains
-----------------
+Added constraints
+-----------------
 
 KeePass databases are generally very flexible and allow almost anything. While this application supports this, it will also enforce additional constrains on data it adds:
 
