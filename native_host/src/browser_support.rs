@@ -239,8 +239,7 @@ impl Browser {
     pub fn extension_id(&self) -> &'static str {
         match self {
             Self::Firefox => "pfp@pfp.works",
-            // TODO: Change this once the extension is released
-            _ => "chrome-extension://kpcjmfjmknbolfjjemmbpnajbiehajac/",
+            _ => "chrome-extension://dkmnfejkonkiccilfpackimaflcijhbj/",
         }
     }
 }
