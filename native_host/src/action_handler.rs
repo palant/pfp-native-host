@@ -233,7 +233,10 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
                 .entries
                 .into_iter()
                 .map(|e| -> Result<_, Error> {
-                    let url = "https://".to_string() + &e.hostname;
+                    let mut url = e.hostname;
+                    if !url.is_empty() {
+                        url.insert_str(0, "https://");
+                    }
                     let mut entry = Entry::new(&url, &e.title, &e.username, &e.password)?;
                     entry.notes = e.notes;
                     Ok(entry)
