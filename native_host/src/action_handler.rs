@@ -135,6 +135,13 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
 
             let mut entry = Entry::new("", &params.title, &params.username, &params.password)?;
             entry.set_hostname(params.hostname);
+            if let Some(notes) = params.notes {
+                entry.notes = if notes.is_empty() { None } else { Some(notes) };
+            }
+            if let Some(tags) = params.tags {
+                entry.tags = if tags.is_empty() { None } else { Some(tags) };
+            }
+
             let protected = database_xml.get_protected_fields();
             let uuid = database_xml.add_entry(entry, &protected)?;
 
@@ -158,6 +165,9 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             }
             if let Some(notes) = params.notes {
                 entry.notes = if notes.is_empty() { None } else { Some(notes) };
+            }
+            if let Some(tags) = params.tags {
+                entry.tags = if tags.is_empty() { None } else { Some(tags) };
             }
 
             if database_xml.get_entries().any(|e| {

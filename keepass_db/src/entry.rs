@@ -162,6 +162,8 @@ impl Entry {
                             return false;
                         }
                     }
+                } else if element.name == "Tags" {
+                    return false;
                 }
             }
             true

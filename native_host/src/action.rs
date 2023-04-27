@@ -130,6 +130,8 @@ pub(crate) struct AddEntryParameters {
     pub title: String,
     pub username: String,
     pub password: String,
+    pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -142,6 +144,7 @@ pub(crate) struct UpdateEntryParameters {
     pub username: Option<String>,
     pub password: Option<String>,
     pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, Debug)]
