@@ -80,7 +80,7 @@ impl<'de> Deserialize<'de> for Action {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) enum Request {
-    GetProtocol,
+    GetProtocol(Option<String>),
     Unlock(UnlockParameters),
     GetEntries(GetEntriesParameters),
     GetAllEntries(GetAllEntriesParameters),

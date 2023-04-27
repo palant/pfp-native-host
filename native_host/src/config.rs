@@ -10,8 +10,7 @@ pub(crate) struct Config {
 
 impl Config {
     fn config_path() -> Result<PathBuf, Error> {
-        let mut path = std::env::current_exe()
-            .or(Err(Error::UnknownConfigLocation))?;
+        let mut path = std::env::current_exe().or(Err(Error::UnknownConfigLocation))?;
         path.pop();
         path.push("pfp-native-host-config.json");
         Ok(path)

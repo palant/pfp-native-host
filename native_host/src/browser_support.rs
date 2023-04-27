@@ -218,8 +218,7 @@ impl Browser {
 
     #[cfg(windows)]
     pub fn configure(&self, extension_id: &str) -> Result<(), BrowserSetupError> {
-        let mut path = std::env::current_exe()
-            .or(Err(BrowserSetupError::NoProcessPath))?;
+        let mut path = std::env::current_exe().or(Err(BrowserSetupError::NoProcessPath))?;
         path.pop();
         path.push("pfp-native-host.json");
         self.write_config(&path, extension_id)?;

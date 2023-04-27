@@ -54,9 +54,38 @@ fn save_database(
     Ok(())
 }
 
+fn compare_versions(version1: &str, version2: &str) -> Option<i32> {
+    use itertools::Itertools;
+    let parts1 = version1.split('.').map(|part| part.parse::<i32>());
+    let parts2 = version2.split('.').map(|part| part.parse::<i32>());
+    for item in parts1.zip_longest(parts2) {
+        let (num1, num2) = match item {
+            itertools::EitherOrBoth::Both(a, b) => (a.ok()?, b.ok()?),
+            itertools::EitherOrBoth::Left(a) => (a.ok()?, 0),
+            itertools::EitherOrBoth::Right(b) => (0, b.ok()?),
+        };
+        if num1 != num2 {
+            return Some(num1 - num2);
+        }
+    }
+    Some(0)
+}
+
 pub(crate) fn handle(action: Action) -> Result<Response, Error> {
     match action.request {
-        Request::GetProtocol => Ok(Response::String("1.0".to_string())),
+        Request::GetProtocol(version) => {
+            const COMPATIBLE_PROTOCOL: &str = "1.0";
+            const CURRENT_PROTOCOL: &str = "1.1";
+
+            let remote_version = version.unwrap_or("1.0".to_string());
+            if compare_versions(&remote_version, COMPATIBLE_PROTOCOL).unwrap_or(-1) >= 0
+                && compare_versions(CURRENT_PROTOCOL, &remote_version).unwrap_or(-1) >= 0
+            {
+                Ok(Response::String(remote_version))
+            } else {
+                Ok(Response::String(CURRENT_PROTOCOL.to_string()))
+            }
+        }
         Request::Unlock(params) => {
             let mut input = get_input()?;
             let database = Database::deserialize(&mut input)?;
