@@ -6,6 +6,7 @@ use crate::Error;
 use crate::XMLHelpers;
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Entry {
     pub uuid: String,
     pub title: String,
@@ -15,6 +16,7 @@ pub struct Entry {
     pub password: String,
     pub notes: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub insecure_fill_in: bool,
 }
 
 fn get_normalized_hostname(url: &str) -> String {
@@ -55,6 +57,7 @@ impl Entry {
             password: password.to_string(),
             notes: None,
             tags: None,
+            insecure_fill_in: false,
         })
     }
 
@@ -66,6 +69,7 @@ impl Entry {
         let mut password = None;
         let mut notes = None;
         let mut tags = None;
+        let mut insecure_fill_in = false;
         for child in element.elements() {
             match child.name.as_str() {
                 "UUID" => uuid = Some(child.text_content().into_owned()),
@@ -77,6 +81,7 @@ impl Entry {
                             "UserName" => username = Some(value.into_owned()),
                             "Password" => password = Some(value.into_owned()),
                             "Notes" => notes = Some(value.into_owned()),
+                            "InsecureFillIn" => insecure_fill_in = value == "true",
                             _ => {}
                         }
                     }
@@ -103,6 +108,7 @@ impl Entry {
             password: password?,
             notes,
             tags,
+            insecure_fill_in,
         })
     }
 
@@ -143,6 +149,11 @@ impl Entry {
         if let Some(tags) = &self.tags {
             element.add_element("Tags", |el| el.set_text_content(tags.join(",").into()));
         }
+        if self.insecure_fill_in {
+            element.add_element("String", |el| {
+                el.set_key_value("InsecureFillIn".into(), "true".into(), false)
+            });
+        }
     }
 
     pub fn to_xml(&self, protected: &HashSet<&str>) -> XMLNode {
@@ -153,7 +164,7 @@ impl Entry {
     }
 
     pub fn update_xml(&self, element: &mut Element, protected: &HashSet<&str>) {
-        let fields = HashSet::from(["URL", "Title", "UserName", "Password", "Notes"]);
+        let fields = HashSet::from(["URL", "Title", "UserName", "Password", "Notes", "InsecureFillIn"]);
         element.children.retain(|child| {
             if let Some(element) = child.as_element() {
                 if element.name == "String" {

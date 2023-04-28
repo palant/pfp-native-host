@@ -141,6 +141,9 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             if let Some(tags) = params.tags {
                 entry.tags = if tags.is_empty() { None } else { Some(tags) };
             }
+            if let Some(insecure_fill_in) = params.insecure_fill_in {
+                entry.insecure_fill_in = insecure_fill_in;
+            }
 
             let protected = database_xml.get_protected_fields();
             let uuid = database_xml.add_entry(entry, &protected)?;
@@ -168,6 +171,9 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             }
             if let Some(tags) = params.tags {
                 entry.tags = if tags.is_empty() { None } else { Some(tags) };
+            }
+            if let Some(insecure_fill_in) = params.insecure_fill_in {
+                entry.insecure_fill_in = insecure_fill_in;
             }
 
             if database_xml.get_entries().any(|e| {
