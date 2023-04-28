@@ -8,9 +8,15 @@ use crate::config::Config;
 use crate::error::Error;
 use crate::response::{AllEntriesResponse, DeriveKeyResponse, Response, SiteEntriesResponse};
 
-fn get_input() -> Result<impl std::io::Read, Error> {
+fn get_input(database_name: &Option<String>) -> Result<impl std::io::Read, Error> {
     let config = Config::read().ok_or(Error::Unconfigured)?;
-    let path = config.databases.get(&config.default_database).ok_or(Error::Unconfigured)?;
+    let path = config
+        .databases
+        .get(match database_name {
+            Some(name) => name,
+            None => &config.default_database,
+        })
+        .ok_or(Error::Unconfigured)?;
     let file = std::fs::File::open(path)?;
     Ok(std::io::BufReader::new(file))
 }
@@ -35,21 +41,31 @@ fn get_title_base(title: &str) -> (String, u32) {
     (title.to_string(), 1)
 }
 
-fn get_database_xml(keys: Vec<String>) -> Result<(Database, DatabaseXML, Keys), Error> {
+fn get_database_xml(
+    database_name: &Option<String>,
+    keys: Vec<String>,
+) -> Result<(Database, DatabaseXML, Keys), Error> {
     let keys = get_keys(keys)?;
-    let mut input = get_input()?;
+    let mut input = get_input(database_name)?;
     let database = Database::deserialize(&mut input)?;
     let database_xml = database.decrypt(&mut input, &keys)?;
     Ok((database, database_xml, keys))
 }
 
 fn save_database(
+    database_name: &Option<String>,
     database: &mut Database,
     database_xml: &mut DatabaseXML,
     keys: &Keys,
 ) -> Result<(), Error> {
     let config = Config::read().ok_or(Error::Unconfigured)?;
-    let path = config.databases.get(&config.default_database).ok_or(Error::Unconfigured)?;
+    let path = config
+        .databases
+        .get(match database_name {
+            Some(name) => name,
+            None => &config.default_database,
+        })
+        .ok_or(Error::Unconfigured)?;
     let file = std::fs::File::create(path)?;
     let mut writer = std::io::BufWriter::new(file);
     database.save(&mut writer, keys, database_xml)?;
@@ -89,14 +105,14 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             }
         }
         Request::Unlock(params) => {
-            let mut input = get_input()?;
+            let mut input = get_input(&action.database)?;
             let database = Database::deserialize(&mut input)?;
             let keys = database.unlock(&params.password)?;
             let (encryption, hmac) = keys.to_string();
             Ok(Response::Keys([encryption, hmac].to_vec()))
         }
         Request::GetEntries(params) => {
-            let (_, database_xml, _) = get_database_xml(params.keys)?;
+            let (_, database_xml, _) = get_database_xml(&action.database, params.keys)?;
             let aliases = database_xml.get_aliases();
             let hostname = aliases.get(&params.hostname).unwrap_or(&params.hostname);
             Ok(Response::SiteEntries(SiteEntriesResponse {
@@ -108,14 +124,14 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             }))
         }
         Request::GetAllEntries(params) => {
-            let (_, database_xml, _) = get_database_xml(params.keys)?;
+            let (_, database_xml, _) = get_database_xml(&action.database, params.keys)?;
             Ok(Response::AllEntries(AllEntriesResponse {
                 aliases: database_xml.get_aliases(),
                 entries: database_xml.get_entries().collect::<Vec<_>>(),
             }))
         }
         Request::GetSites(params) => {
-            let (_, database_xml, _) = get_database_xml(params.keys)?;
+            let (_, database_xml, _) = get_database_xml(&action.database, params.keys)?;
             Ok(Response::Sites(
                 database_xml
                     .get_entries()
@@ -126,7 +142,8 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             ))
         }
         Request::AddEntry(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
 
             if database_xml.get_entries().any(|entry| {
                 entry.hostname().eq_ignore_ascii_case(&params.hostname)
@@ -150,11 +167,12 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             let protected = database_xml.get_protected_fields();
             let uuid = database_xml.add_entry(entry, &protected)?;
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::String(uuid))
         }
         Request::UpdateEntry(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             let mut entry = database_xml.get_entry(&params.uuid)?;
             if let Some(hostname) = params.hostname {
                 entry.set_hostname(hostname);
@@ -188,11 +206,12 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
 
             let protected = database_xml.get_protected_fields();
             database_xml.update_entry(entry, &protected)?;
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
         Request::DuplicateEntry(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             let mut entry = database_xml.get_entry(&params.uuid)?;
 
             let hostname = entry.hostname();
@@ -216,18 +235,19 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             let protected = database_xml.get_protected_fields();
             let uuid = database_xml.add_entry(entry, &protected)?;
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::String(uuid))
         }
         Request::RemoveEntry(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             database_xml.remove_entry(&params.uuid)?;
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
         Request::DuplicateKdfParameters => {
-            let mut input = get_input()?;
+            let mut input = get_input(&action.database)?;
             let database = Database::deserialize(&mut input)?;
             let mut parameters = database.get_kdf_parameters().clone();
             parameters.reset_salt()?;
@@ -254,28 +274,32 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             }))
         }
         Request::AddAlias(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             database_xml.add_alias(&params.alias, &params.hostname);
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
         Request::RemoveAlias(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             database_xml.remove_alias(&params.alias);
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
         Request::SetAliases(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             database_xml.set_aliases(params.aliases);
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
         Request::Import(params) => {
-            let (mut database, mut database_xml, keys) = get_database_xml(params.keys)?;
+            let (mut database, mut database_xml, keys) =
+                get_database_xml(&action.database, params.keys)?;
             let entries = params
                 .entries
                 .into_iter()
@@ -293,7 +317,7 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             let protected = database_xml.get_protected_fields();
             database_xml.import(entries, params.aliases, &protected)?;
 
-            save_database(&mut database, &mut database_xml, &keys)?;
+            save_database(&action.database, &mut database, &mut database_xml, &keys)?;
             Ok(Response::None)
         }
     }

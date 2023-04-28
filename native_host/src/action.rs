@@ -3,6 +3,7 @@ use serde::{Deserialize, Deserializer};
 #[derive(Debug)]
 pub(crate) struct Action {
     pub request_id: String,
+    pub database: Option<String>,
     pub request: Request,
 }
 
@@ -24,10 +25,12 @@ impl<'de> Deserialize<'de> for Action {
                 use serde::de::IntoDeserializer;
 
                 const REQUEST_ID_FIELD: &str = "requestId";
+                const DATABASE_FIELD: &str = "database";
                 const ACTION_FIELD: &str = "action";
                 const REQUEST_FIELD: &str = "request";
 
                 let mut request_id = None;
+                let mut database = None;
                 let mut action = None;
                 let mut request = None;
                 while let Some(key) = map.next_key()? {
@@ -37,6 +40,12 @@ impl<'de> Deserialize<'de> for Action {
                                 return Err(A::Error::duplicate_field(REQUEST_ID_FIELD));
                             }
                             request_id = Some(map.next_value()?);
+                        }
+                        DATABASE_FIELD => {
+                            if database.is_some() {
+                                return Err(A::Error::duplicate_field(DATABASE_FIELD));
+                            }
+                            database = Some(map.next_value()?);
                         }
                         ACTION_FIELD => {
                             if action.is_some() {
@@ -53,7 +62,12 @@ impl<'de> Deserialize<'de> for Action {
                         other => {
                             return Err(A::Error::unknown_field(
                                 other,
-                                &[REQUEST_ID_FIELD, ACTION_FIELD, REQUEST_FIELD],
+                                &[
+                                    REQUEST_ID_FIELD,
+                                    DATABASE_FIELD,
+                                    ACTION_FIELD,
+                                    REQUEST_FIELD,
+                                ],
                             ))
                         }
                     }
@@ -67,6 +81,7 @@ impl<'de> Deserialize<'de> for Action {
 
                 Ok(Self::Value {
                     request_id: request_id.ok_or(A::Error::missing_field(REQUEST_ID_FIELD))?,
+                    database,
                     request: Request::deserialize(json.into_deserializer())
                         .map_err(A::Error::custom)?,
                 })

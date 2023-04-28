@@ -49,10 +49,9 @@ fn save_databases(
     mut default_database: String,
 ) -> Result<(), Error> {
     if !databases.is_empty()
-        && databases
+        && !databases
             .iter()
-            .find(|(name, _)| name == &default_database)
-            .is_none()
+            .any(|(name, _)| name == &default_database)
     {
         default_database = databases[0].0.clone();
     }
@@ -230,7 +229,7 @@ fn add_database() -> Result<(), Error> {
             .with_prompt("Enter a name for this database")
             .default("Passwords".to_string())
             .interact_text()?;
-        if databases.iter().find(|(n, _)| n == &name).is_some() {
+        if databases.iter().any(|(n, _)| n == &name) {
             eprintln!("This database name already exists, please choose another.");
         } else {
             break;
