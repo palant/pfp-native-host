@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::error::Error;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Config {
-    database: PathBuf,
+    pub databases: HashMap<String, PathBuf>,
+    pub default_database: String,
 }
 
 impl Config {
@@ -16,22 +18,16 @@ impl Config {
         Ok(path)
     }
 
-    pub fn get_database_path() -> Option<PathBuf> {
+    pub fn read() -> Option<Self> {
         let config_path = Self::config_path().ok()?;
         let reader = std::fs::File::open(config_path).ok()?;
-        let config: Self = serde_json::from_reader(reader).ok()?;
-        Some(config.database)
+        serde_json::from_reader(reader).ok()
     }
 
-    pub fn set_database_path(path: PathBuf) -> Result<(), Error> {
+    pub fn save(&self) -> Result<(), Error> {
         let config_path = Self::config_path()?;
         let writer = std::fs::File::create(config_path)?;
-        serde_json::to_writer_pretty(
-            writer,
-            &Self {
-                database: path.canonicalize().unwrap_or(path),
-            },
-        )?;
+        serde_json::to_writer_pretty(writer, self)?;
         Ok(())
     }
 }

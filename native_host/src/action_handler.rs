@@ -9,7 +9,8 @@ use crate::error::Error;
 use crate::response::{AllEntriesResponse, DeriveKeyResponse, Response, SiteEntriesResponse};
 
 fn get_input() -> Result<impl std::io::Read, Error> {
-    let path = Config::get_database_path().ok_or(Error::Unconfigured)?;
+    let config = Config::read().ok_or(Error::Unconfigured)?;
+    let path = config.databases.get(&config.default_database).ok_or(Error::Unconfigured)?;
     let file = std::fs::File::open(path)?;
     Ok(std::io::BufReader::new(file))
 }
@@ -47,7 +48,8 @@ fn save_database(
     database_xml: &mut DatabaseXML,
     keys: &Keys,
 ) -> Result<(), Error> {
-    let path = Config::get_database_path().ok_or(Error::Unconfigured)?;
+    let config = Config::read().ok_or(Error::Unconfigured)?;
+    let path = config.databases.get(&config.default_database).ok_or(Error::Unconfigured)?;
     let file = std::fs::File::create(path)?;
     let mut writer = std::io::BufWriter::new(file);
     database.save(&mut writer, keys, database_xml)?;

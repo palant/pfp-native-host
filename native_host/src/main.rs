@@ -33,6 +33,37 @@ use std::path::PathBuf;
 use config::Config;
 use error::Error;
 
+fn get_databases() -> (Vec<(String, PathBuf)>, String) {
+    match Config::read() {
+        Some(config) => {
+            let mut vec = config.databases.into_iter().collect::<Vec<_>>();
+            vec.sort_by_cached_key(|(name, _)| name.to_ascii_lowercase());
+            (vec, config.default_database)
+        }
+        None => (Vec::new(), "".to_string()),
+    }
+}
+
+fn save_databases(
+    databases: Vec<(String, PathBuf)>,
+    mut default_database: String,
+) -> Result<(), Error> {
+    if !databases.is_empty()
+        && databases
+            .iter()
+            .find(|(name, _)| name == &default_database)
+            .is_none()
+    {
+        default_database = databases[0].0.clone();
+    }
+
+    Config {
+        databases: databases.into_iter().collect(),
+        default_database,
+    }
+    .save()
+}
+
 fn database_valid(path: &PathBuf) -> Result<(), Error> {
     let mut file = std::fs::File::open(path)?;
     let mut reader = std::io::BufReader::new(&mut file);
@@ -172,45 +203,125 @@ fn create_database(path: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-fn select_database() -> Result<(), Error> {
-    let items = &["Select an existing database", "Create a new database"];
+fn add_database() -> Result<(), Error> {
     let selection = Select::new()
         .with_prompt("If you already have a KeePass database, this application can use it")
-        .items(items)
+        .items(&["Add an existing database", "Create a new database"])
         .default(0)
         .interact_opt()?
         .ok_or(Error::Aborted)?;
-    if selection == 0 {
-        Config::set_database_path(choose_path(false)?)
+
+    let path = if selection == 0 {
+        let path = choose_path(false)?;
+        if !try_database(&path) {
+            return Ok(());
+        }
+        path
     } else {
         let path = choose_path(true)?;
         create_database(&path)?;
-        Config::set_database_path(path)
+        path
+    };
+
+    let (mut databases, default) = get_databases();
+    let mut name;
+    loop {
+        name = Input::new()
+            .with_prompt("Enter a name for this database")
+            .default("Passwords".to_string())
+            .interact_text()?;
+        if databases.iter().find(|(n, _)| n == &name).is_some() {
+            eprintln!("This database name already exists, please choose another.");
+        } else {
+            break;
+        }
+    }
+
+    databases.push((name, path));
+    save_databases(databases, default)
+}
+
+fn remove_database() -> Result<(), Error> {
+    let (mut databases, default) = get_databases();
+    let items = databases
+        .iter()
+        .map(|(name, _)| name.clone())
+        .collect::<Vec<_>>();
+    let selection = Select::new()
+        .with_prompt("Please choose a database to remove from the list")
+        .items(&items)
+        .default(0)
+        .interact_opt()?
+        .ok_or(Error::Aborted)?;
+    databases.swap_remove(selection);
+    save_databases(databases, default)
+}
+
+fn choose_default_database() -> Result<(), Error> {
+    let (databases, _) = get_databases();
+    let items = databases
+        .iter()
+        .map(|(name, _)| name.clone())
+        .collect::<Vec<_>>();
+    let selection = Select::new()
+        .with_prompt("Please choose a database to be the default")
+        .items(&items)
+        .default(0)
+        .interact_opt()?
+        .ok_or(Error::Aborted)?;
+
+    let default = databases[selection].0.clone();
+    save_databases(databases, default)
+}
+
+fn ignore_abort(result: Result<(), Error>) -> Result<(), Error> {
+    match result {
+        Err(Error::Aborted) => Ok(()),
+        other => other,
     }
 }
 
-fn setup_database() -> Result<(), Error> {
-    match Config::get_database_path() {
-        Some(path) => {
-            eprintln!("Currently configured database file is {}.", path.display());
-            let selection = Select::new()
-                .with_prompt("Keep using this database file")
-                .items(&["Yes", "No"])
-                .default(0)
-                .interact_opt()?
-                .ok_or(Error::Aborted)?;
-
-            if selection != 0 || !try_database(&path) {
-                select_database()?;
-                setup_database()
+fn setup_databases() -> Result<(), Error> {
+    let (databases, default) = get_databases();
+    if databases.is_empty() {
+        eprintln!("No databases configured, you need to add a database.");
+        add_database()?;
+        setup_databases()
+    } else {
+        eprintln!();
+        eprintln!("Currently configured databases:");
+        for (name, path) in databases.iter() {
+            if name == &default {
+                eprintln!("{name}: {} [default]", path.display());
             } else {
-                setup_browsers()
+                eprintln!("{name}: {}", path.display());
             }
         }
-        None => {
-            eprintln!("Database is not configured.");
-            select_database()?;
-            setup_database()
+
+        eprintln!();
+        let selection = Select::new()
+            .with_prompt("Choose an action")
+            .items(&[
+                "Continue to browser configuration",
+                "Add a database",
+                "Remove a database",
+                "Choose default database",
+            ])
+            .default(0)
+            .interact_opt()?
+            .ok_or(Error::Aborted)?;
+
+        if selection == 1 {
+            ignore_abort(add_database())?;
+            setup_databases()
+        } else if selection == 2 {
+            ignore_abort(remove_database())?;
+            setup_databases()
+        } else if selection == 3 {
+            ignore_abort(choose_default_database())?;
+            setup_databases()
+        } else {
+            setup_browsers()
         }
     }
 }
@@ -222,6 +333,7 @@ fn setup_browsers() -> Result<(), Error> {
             .filter(|b| b.is_configured())
             .map(|b| b.name())
             .collect::<Vec<_>>();
+        eprintln!();
         if configured.is_empty() {
             eprintln!("No browsers are currently configured.");
         } else {
@@ -253,7 +365,7 @@ fn main_inner() -> Result<(), Error> {
     if args.len() >= 2 {
         native_host::run_server()
     } else {
-        setup_database()
+        setup_databases()
     }
 }
 

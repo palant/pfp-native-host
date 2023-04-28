@@ -164,7 +164,14 @@ impl Entry {
     }
 
     pub fn update_xml(&self, element: &mut Element, protected: &HashSet<&str>) {
-        let fields = HashSet::from(["URL", "Title", "UserName", "Password", "Notes", "InsecureFillIn"]);
+        let fields = HashSet::from([
+            "URL",
+            "Title",
+            "UserName",
+            "Password",
+            "Notes",
+            "InsecureFillIn",
+        ]);
         element.children.retain(|child| {
             if let Some(element) = child.as_element() {
                 if element.name == "String" {
