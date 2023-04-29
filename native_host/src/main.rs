@@ -48,11 +48,7 @@ fn save_databases(
     databases: Vec<(String, PathBuf)>,
     mut default_database: String,
 ) -> Result<(), Error> {
-    if !databases.is_empty()
-        && !databases
-            .iter()
-            .any(|(name, _)| name == &default_database)
-    {
+    if !databases.is_empty() && !databases.iter().any(|(name, _)| name == &default_database) {
         default_database = databases[0].0.clone();
     }
 

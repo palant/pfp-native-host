@@ -6,7 +6,9 @@ use std::collections::HashSet;
 use crate::action::{Action, Request};
 use crate::config::Config;
 use crate::error::Error;
-use crate::response::{AllEntriesResponse, DeriveKeyResponse, Response, SiteEntriesResponse};
+use crate::response::{
+    AllEntriesResponse, DatabasesResponse, DeriveKeyResponse, Response, SiteEntriesResponse,
+};
 
 fn get_input(database_name: &Option<String>) -> Result<impl std::io::Read, Error> {
     let config = Config::read().ok_or(Error::Unconfigured)?;
@@ -103,6 +105,16 @@ pub(crate) fn handle(action: Action) -> Result<Response, Error> {
             } else {
                 Ok(Response::String(CURRENT_PROTOCOL.to_string()))
             }
+        }
+        Request::GetDatabases => {
+            let config = Config::read().ok_or(Error::Unconfigured)?;
+            if config.databases.is_empty() {
+                return Err(Error::Unconfigured);
+            }
+            Ok(Response::Databases(DatabasesResponse {
+                databases: config.databases.into_keys().collect(),
+                default_database: config.default_database,
+            }))
         }
         Request::Unlock(params) => {
             let mut input = get_input(&action.database)?;

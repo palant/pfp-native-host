@@ -14,6 +14,7 @@ pub(crate) struct ActionResponse {
 #[serde(untagged)]
 pub(crate) enum Response {
     Error(ErrorResponse),
+    Databases(DatabasesResponse),
     Keys(Vec<String>),
     SiteEntries(SiteEntriesResponse),
     AllEntries(AllEntriesResponse),
@@ -28,6 +29,13 @@ pub(crate) enum Response {
 pub(crate) struct ErrorResponse {
     pub error: String,
     pub error_code: &'static str,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DatabasesResponse {
+    pub databases: Vec<String>,
+    pub default_database: String,
 }
 
 #[derive(Serialize, Debug)]
