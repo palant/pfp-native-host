@@ -45,7 +45,7 @@ impl<'de> Deserialize<'de> for Action {
                             if database.is_some() {
                                 return Err(A::Error::duplicate_field(DATABASE_FIELD));
                             }
-                            database = Some(map.next_value()?);
+                            database = map.next_value()?;
                         }
                         ACTION_FIELD => {
                             if action.is_some() {
