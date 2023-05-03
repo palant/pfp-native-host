@@ -485,32 +485,39 @@ mod tests {
         ));
 
         assert!(matches!(
-            deserialize(hex!(
-                "01   04 00 00 00   03 00 00 00   00    00 00 00 00"
-            ))
-            .expect_err("Deserializing with fields missing"),
+            deserialize(hex!("01   04 00 00 00   03 00 00 00   00    00 00 00 00"))
+                .expect_err("Deserializing with fields missing"),
             Error::HeaderFieldsMissing
         ));
 
-        let header = deserialize(hex!("
+        let header = deserialize(hex!(
+            "
             01   04 00 00 00   03 00 00 00
             02   08 00 00 00   01 02 03 04 05 06 07 08
             03   01 00 00 00   00
             03   05 00 00 00   01 02 03 04 05
             00   00 00 00 00
-        ")).expect("Deserializing a complete inner header");
+        "
+        ))
+        .expect("Deserializing a complete inner header");
 
         assert_eq!(header.cipher, StreamCipher::ChaCha20);
         assert_eq!(header.key, hex!("01 02 03 04 05 06 07 08"));
         assert_eq!(header.binaries.len(), 2);
-        assert_eq!(header.binaries[0], Binary {
-            flags: 0x00,
-            data: hex!("").to_vec(),
-        });
-        assert_eq!(header.binaries[1], Binary {
-            flags: 0x01,
-            data: hex!("02 03 04 05").to_vec(),
-        });
+        assert_eq!(
+            header.binaries[0],
+            Binary {
+                flags: 0x00,
+                data: hex!("").to_vec(),
+            }
+        );
+        assert_eq!(
+            header.binaries[1],
+            Binary {
+                flags: 0x01,
+                data: hex!("02 03 04 05").to_vec(),
+            }
+        );
     }
 
     #[test]
@@ -518,24 +525,29 @@ mod tests {
         let header = InnerHeader {
             cipher: StreamCipher::ChaCha20,
             key: hex!("01 02 03 04 05 06 07 08").to_vec(),
-            binaries: vec![Binary {
-                flags: 0x00,
-                data: hex!("").to_vec(),
-            }, Binary {
-                flags: 0x01,
-                data: hex!("02 03 04 05").to_vec(),
-            }],
+            binaries: vec![
+                Binary {
+                    flags: 0x00,
+                    data: hex!("").to_vec(),
+                },
+                Binary {
+                    flags: 0x01,
+                    data: hex!("02 03 04 05").to_vec(),
+                },
+            ],
         };
 
         assert_eq!(
             serialize(&header),
-            hex!("
+            hex!(
+                "
                 01   04 00 00 00   03 00 00 00
                 02   08 00 00 00   01 02 03 04 05 06 07 08
                 03   01 00 00 00   00
                 03   05 00 00 00   01 02 03 04 05
                 00   00 00 00 00
-            ")
+            "
+            )
         );
     }
 }

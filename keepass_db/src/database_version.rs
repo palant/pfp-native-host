@@ -6,9 +6,12 @@ use crate::Error;
 const SIGNATURE1: u32 = 0x9AA2D903;
 const SIGNATURE2: u32 = 0xB54BFB67;
 
+/// Represents the KeePass database version
 #[derive(Debug, PartialEq)]
 pub struct DatabaseVersion {
+    /// Major version part
     pub major: u16,
+    /// Minor version part
     pub minor: u16,
 }
 
@@ -50,5 +53,48 @@ impl Deserialize for DatabaseVersion {
         }
 
         Ok(version)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hex_literal::hex;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(format!("{}", DatabaseVersion { major: 4, minor: 1 }), "4.1");
+        assert_eq!(format!("{}", DatabaseVersion::default()), "4.0")
+    }
+
+    #[test]
+    fn test_deserialize() {
+        fn deserialize<T: AsRef<[u8]>>(data: T) -> Result<DatabaseVersion, Error> {
+            let mut cursor = Cursor::new(data);
+            DatabaseVersion::deserialize(&mut cursor)
+        }
+
+        assert!(matches!(
+            deserialize(hex!("01 02 03 04   05 06 07 08   01 00 04 00"))
+                .expect_err("Deserializing invalid file signature"),
+            Error::CorruptDatabase
+        ));
+
+        assert_eq!(
+            deserialize(hex!("03 d9 a2 9a   67 fb 4b b5   01 00 04 00"))
+                .expect("Deserializing correct database version"),
+            DatabaseVersion { major: 4, minor: 1 }
+        );
+    }
+
+    #[test]
+    fn test_serialize() {
+        let mut vec = Vec::new();
+        DatabaseVersion { major: 4, minor: 1 }
+            .serialize(&mut vec)
+            .unwrap();
+
+        assert_eq!(vec, hex!("03 d9 a2 9a   67 fb 4b b5   01 00 04 00"));
     }
 }
