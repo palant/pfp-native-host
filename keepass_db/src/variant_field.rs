@@ -16,7 +16,7 @@ numeric_enum! {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum VariantValue {
     EndOfList,
     U32(u32),
@@ -43,7 +43,7 @@ impl VariantValue {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct VariantField {
     pub key: String,
     pub value: VariantValue,

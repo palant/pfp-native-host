@@ -7,10 +7,10 @@ use crate::Error;
 #[derive(Debug, PartialEq)]
 pub(crate) struct Binary {
     /// Attachment flags, 0x01 indicates that memory protection should be enabled (ignored).
-    flags: u8,
+    pub(crate) flags: u8,
 
     /// Binary file data
-    data: Vec<u8>,
+    pub(crate) data: Vec<u8>,
 }
 
 impl Binary {
@@ -49,19 +49,13 @@ mod tests {
     use hex_literal::hex;
     use std::io::Cursor;
 
-    fn deserialize<const SIZE: usize>(data: [u8; SIZE]) -> Result<Binary, Error> {
-        let mut cursor = Cursor::new(data);
-        Binary::deserialize(&mut cursor, SIZE)
-    }
-
-    fn serialize(binary: Binary) -> Result<Vec<u8>, Error> {
-        let mut result = Vec::new();
-        binary.serialize(&mut result)?;
-        Ok(result)
-    }
-
     #[test]
     fn test_deserialize() {
+        fn deserialize<const SIZE: usize>(data: [u8; SIZE]) -> Result<Binary, Error> {
+            let mut cursor = Cursor::new(data);
+            Binary::deserialize(&mut cursor, SIZE)
+        }
+
         assert!(matches!(
             deserialize(hex!("")).expect_err("Deserializing empty data"),
             Error::InvalidFieldSize
@@ -91,6 +85,12 @@ mod tests {
 
     #[test]
     fn test_serialize() {
+        fn serialize(binary: Binary) -> Result<Vec<u8>, Error> {
+            let mut result = Vec::new();
+            binary.serialize(&mut result)?;
+            Ok(result)
+        }
+
         assert_eq!(
             serialize(Binary {
                 flags: 0x00,

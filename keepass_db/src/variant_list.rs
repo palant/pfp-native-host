@@ -5,7 +5,7 @@ use crate::io::{Deserialize, Serialize};
 
 const VERSION: u16 = 0x0100;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct VariantList {
     list: Vec<VariantField>,
 }

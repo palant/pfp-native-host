@@ -6,7 +6,7 @@ use crate::Error;
 const SIGNATURE1: u32 = 0x9AA2D903;
 const SIGNATURE2: u32 = 0xB54BFB67;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct DatabaseVersion {
     pub major: u16,
     pub minor: u16,

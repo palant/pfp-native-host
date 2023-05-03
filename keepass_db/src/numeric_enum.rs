@@ -11,7 +11,7 @@ macro_rules! numeric_enum {
         $(
             #[$($type_meta)*]
         )*
-        #[derive(Debug)]
+        #[derive(Debug, PartialEq)]
         pub(crate) enum $name {
             $(
                 $(
