@@ -238,6 +238,7 @@ impl Browser {
     pub fn extension_id(&self) -> &'static str {
         match self {
             Self::Firefox => "pfp@pfp.works",
+            Self::Opera => "chrome-extension://acjakjmeakniefmigneibkdgnjmmcdbj/",
             _ => "chrome-extension://dkmnfejkonkiccilfpackimaflcijhbj/",
         }
     }
