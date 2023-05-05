@@ -1,7 +1,7 @@
 //! Provides a macro to simplify declaring error enums. An error type is
 //! declared as follows:
 //!
-//! ```no_run
+//! ```ignore
 //! error_enum::declare!{
 //!     pub enum Error {
 //!         Database(DatabaseError{serde_json::Error, some_crate::Error}),
@@ -38,7 +38,7 @@
 
 /// Declares an error enum type and implements the required traits:
 ///
-/// ```no_run
+/// ```ignore
 /// error_enum::declare!{
 ///     pub enum Error {
 ///         Database(DatabaseError{serde_json::Error, some_crate::Error}),
