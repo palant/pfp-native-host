@@ -30,12 +30,14 @@ macro_rules! declare_type {
     {$visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty), $($rest:tt)*} => {
         $crate::declare_type!{$visibility $type [
             $($variants)*
+            #[doc=concat!("Wrapping ", stringify!($inner), " error type")]
             $name($inner),
         ] $($rest)*}
     };
     {$visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty{$($other:ty),*}), $($rest:tt)*} => {
         $crate::declare_type!{$visibility $type [
             $($variants)*
+            #[doc=concat!("Wrapping ", stringify!($inner), " error type")]
             $name($inner),
         ] $($rest)*}
     };
