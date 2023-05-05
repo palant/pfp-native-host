@@ -1,26 +1,54 @@
 //! Provides a macro to simplify declaring error enums. An error type is
 //! declared as follows:
 //!
-//! ```ignore
+//! ```
+//! error_enum::declare!{
+//!     pub enum DatabaseError {
+//!         Io(std::io::Error),
+//!         Encoding(std::str::Utf8Error),
+//!         ///The database file is corrupt
+//!         CorruptDatabase,
+//!     }
+//! }
+//!
 //! error_enum::declare!{
 //!     pub enum Error {
-//!         Database(DatabaseError{serde_json::Error, some_crate::Error}),
-//!         Io(std::io::Error),
+//!         Database(DatabaseError{std::io::Error, std::str::Utf8Error}),
+//!         Parsing(std::num::ParseIntError),
 //!         ///Unexpected error occurred
 //!         UnexpectedError,
 //!         ///The value {} is not supported
 //!         InvalidValue(u32),
 //!     }
 //! }
+//!
+//! let io_error = Error::from(std::io::Error::new(std::io::ErrorKind::Other, "oh no!"));
+//! assert_eq!(io_error.code(), "Io");
+//! assert_eq!(format!("{io_error}"), "oh no!");
+//!
+//! let parse_error = Error::from(u32::from_str_radix("abc", 10).unwrap_err());
+//! assert_eq!(parse_error.code(), "Parsing");
+//! assert_eq!(
+//!     format!("{parse_error}"),
+//!     format!("{}", u32::from_str_radix("abc", 10).unwrap_err())
+//! );
+//!
+//! let unexpected_error = Error::UnexpectedError;
+//! assert_eq!(unexpected_error.code(), "UnexpectedError");
+//! assert_eq!(format!("{unexpected_error}"), "Unexpected error occurred");
+//!
+//! let value_error = Error::InvalidValue(12);
+//! assert_eq!(value_error.code(), "InvalidValue");
+//! assert_eq!(format!("{value_error}"), "The value 12 is not supported");
 //! ```
 //!
 //! Four types of enum entries are supported:
 //!
-//! * `Database(DatabaseError{serde_json::Error, some_crate::Error})` wraps
-//!   another error enum type. The error types `serde_json::Error` and
-//!   `some_crate::Error` are wrapped by that error enum, `From<>` trait
+//! * `Database(DatabaseError{std::io::Error, std::str::Utf8Error})` wraps
+//!   another error enum type. The error types `std::io::Error` and
+//!   `std::str::Utf8Error` are wrapped by that error enum, `From<>` trait
 //!   implementations for these types should delegate to the wrapped enum.
-//! * `Io(std::io::Error)` wraps an external error type.
+//! * `Parsing(std::num::ParseIntError)` wraps an external error type.
 //! * `UnexpectedError` is a plain error variant, doc comment is mandatory.
 //! * `InvalidValue(u32)` is a parametrized error variant, doc comment is mandatory.
 //!
@@ -38,11 +66,20 @@
 
 /// Declares an error enum type and implements the required traits:
 ///
-/// ```ignore
+/// ```
+/// error_enum::declare!{
+///     pub enum DatabaseError {
+///         Io(std::io::Error),
+///         Encoding(std::str::Utf8Error),
+///         ///The database file is corrupt
+///         CorruptDatabase,
+///     }
+/// }
+///
 /// error_enum::declare!{
 ///     pub enum Error {
-///         Database(DatabaseError{serde_json::Error, some_crate::Error}),
-///         Io(std::io::Error),
+///         Database(DatabaseError{std::io::Error, std::str::Utf8Error}),
+///         Parsing(std::num::ParseIntError),
 ///         ///Unexpected error occurred
 ///         UnexpectedError,
 ///         ///The value {} is not supported
