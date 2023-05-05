@@ -17,9 +17,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        toolchain: [nightly, stable]
+        toolchain: [nightly-2023-04-16, stable]
         include:
-        - toolchain: nightly
+        - toolchain: nightly-2023-04-16
           flags: -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
         - toolchain: stable
           flags:
