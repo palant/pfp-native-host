@@ -1,4 +1,5 @@
 error_enum::declare! {
+    /// The error type returned by various KeePass database operations.
     pub enum Error {
         Io(std::io::Error),
         Encoding(std::string::FromUtf8Error),

@@ -3,6 +3,7 @@
 //!
 //! ```
 //! error_enum::declare!{
+//!     /// Error type returned by database operations
 //!     pub enum DatabaseError {
 //!         Io(std::io::Error),
 //!         Encoding(std::str::Utf8Error),
@@ -12,6 +13,7 @@
 //! }
 //!
 //! error_enum::declare!{
+//!     /// Generic error type
 //!     pub enum Error {
 //!         Database(DatabaseError{std::io::Error, std::str::Utf8Error}),
 //!         Parsing(std::num::ParseIntError),
@@ -68,6 +70,7 @@
 ///
 /// ```
 /// error_enum::declare!{
+///     /// Error type returned by database operations
 ///     pub enum DatabaseError {
 ///         Io(std::io::Error),
 ///         Encoding(std::str::Utf8Error),
@@ -77,6 +80,7 @@
 /// }
 ///
 /// error_enum::declare!{
+///     /// Generic error type
 ///     pub enum Error {
 ///         Database(DatabaseError{std::io::Error, std::str::Utf8Error}),
 ///         Parsing(std::num::ParseIntError),
@@ -90,10 +94,10 @@
 
 #[macro_export]
 macro_rules! declare {
-    {$visibility:vis enum $type:ident {
+    {$(#[$meta:meta])* $visibility:vis enum $type:ident {
         $($variants:tt)*
     }} => {
-        $crate::declare_type!{$visibility $type [] $($variants)*}
+        $crate::declare_type!{#[$($meta)*] $visibility $type [] $($variants)*}
         $crate::impl_from!{$type $($variants)*}
         $crate::impl_code!{$type [] $($variants)*}
         $crate::impl_display!{$type [] $($variants)*}
@@ -103,35 +107,38 @@ macro_rules! declare {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! declare_type {
-    {$visibility:vis $type:ident [$($variants:tt)*] #[doc=$doc:literal] $name:ident, $($rest:tt)*} => {
-        $crate::declare_type!{$visibility $type [
+    {#[$($meta:meta)*] $visibility:vis $type:ident [$($variants:tt)*] #[doc=$doc:literal] $name:ident, $($rest:tt)*} => {
+        $crate::declare_type!{#[$($meta)*] $visibility $type [
             $($variants)*
             #[doc=$doc]
             $name,
         ]  $($rest)*}
     };
-    {$visibility:vis $type:ident [$($variants:tt)*] #[doc=$doc:literal] $name:ident($inner:ty), $($rest:tt)*} => {
-        $crate::declare_type!{$visibility $type [
+    {#[$($meta:meta)*] $visibility:vis $type:ident [$($variants:tt)*] #[doc=$doc:literal] $name:ident($inner:ty), $($rest:tt)*} => {
+        $crate::declare_type!{#[$($meta)*] $visibility $type [
             $($variants)*
             #[doc=$doc]
             $name($inner),
         ] $($rest)*}
     };
-    {$visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty), $($rest:tt)*} => {
-        $crate::declare_type!{$visibility $type [
+    {#[$($meta:meta)*] $visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty), $($rest:tt)*} => {
+        $crate::declare_type!{#[$($meta)*] $visibility $type [
             $($variants)*
             #[doc=concat!("Wrapping ", stringify!($inner), " error type")]
             $name($inner),
         ] $($rest)*}
     };
-    {$visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty{$($other:ty),*}), $($rest:tt)*} => {
-        $crate::declare_type!{$visibility $type [
+    {#[$($meta:meta)*] $visibility:vis $type:ident [$($variants:tt)*] $name:ident($inner:ty{$($other:ty),*}), $($rest:tt)*} => {
+        $crate::declare_type!{#[$($meta)*] $visibility $type [
             $($variants)*
             #[doc=concat!("Wrapping ", stringify!($inner), " error type")]
             $name($inner),
         ] $($rest)*}
     };
-    {$visibility:vis $type:ident [$($variants:tt)*]} => {
+    {#[$($meta:meta)*] $visibility:vis $type:ident [$($variants:tt)*]} => {
+        $(
+            #[$meta]
+        )*
         #[derive(Debug)]
         $visibility enum $type {
             $($variants)*
