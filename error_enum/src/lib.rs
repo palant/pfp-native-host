@@ -1,3 +1,56 @@
+//! Provides a macro to simplify declaring error enums. An error type is
+//! declared as follows:
+//!
+//! ```no_run
+//! error_enum::declare!{
+//!     pub enum Error {
+//!         Database(DatabaseError{serde_json::Error, some_crate::Error}),
+//!         Io(std::io::Error),
+//!         ///Unexpected error occurred
+//!         UnexpectedError,
+//!         ///The value {} is not supported
+//!         InvalidValue(u32),
+//!     }
+//! }
+//! ```
+//!
+//! Four types of enum entries are supported:
+//!
+//! * `Database(DatabaseError{serde_json::Error, some_crate::Error})` wraps
+//!   another error enum type. The error types `serde_json::Error` and
+//!   `some_crate::Error` are wrapped by that error enum, `From<>` trait
+//!   implementations for these types should delegate to the wrapped enum.
+//! * `Io(std::io::Error)` wraps an external error type.
+//! * `UnexpectedError` is a plain error variant, doc comment is mandatory.
+//! * `InvalidValue(u32)` is a parametrized error variant, doc comment is mandatory.
+//!
+//! The following traits are being automatically implemented:
+//!
+//! * `Debug`
+//! * `Display`: For wrapped errors, the implementation defers to their
+//!   `Display` implementation. For other variants, the doc comment is used as
+//!   format string.
+//! * `From<OtherError>`: This is implemented for all wrapped error types as
+//!   well as declared wrapped error types for wrapped error enums.
+//!
+//! In addition, a public method `code()` is implemented. It returns the
+//! variant name. For wrapped error enums it defers to their `code()` method.
+
+/// Declares an error enum type and implements the required traits:
+///
+/// ```no_run
+/// error_enum::declare!{
+///     pub enum Error {
+///         Database(DatabaseError{serde_json::Error, some_crate::Error}),
+///         Io(std::io::Error),
+///         ///Unexpected error occurred
+///         UnexpectedError,
+///         ///The value {} is not supported
+///         InvalidValue(u32),
+///     }
+/// }
+/// ```
+
 #[macro_export]
 macro_rules! declare {
     {$visibility:vis enum $type:ident {
